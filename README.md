@@ -35,3 +35,4 @@ Double-click `index.html`, or upload all files to a new Replit HTML/CSS/JS proje
 6. Add medication pickup alerts
 7. Sync entries to Google Sheets
 8. Add monthly tax reporting fields
+Testing automatic deployment.
