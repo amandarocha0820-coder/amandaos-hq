@@ -1,6 +1,16 @@
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 
+// ======================================
+// Google Calendar
+// ======================================
+
+const GOOGLE_CLIENT_ID =
+"962792348280-ft1u20jllo38g1gl4dj13r5jpknui4hl.apps.googleusercontent.com";
+
+let googleTokenClient = null;
+let googleAccessToken = null;
+
 const store = {
   get(key){ return JSON.parse(localStorage.getItem(key) || "[]"); },
   set(key, value){ localStorage.setItem(key, JSON.stringify(value)); },
@@ -276,3 +286,60 @@ function renderAll(){
   renderTax();
   renderTodaysMission();
 }renderAll();
+// ======================================
+// Connect Google Calendar
+// ======================================
+
+window.addEventListener("load", () => {
+  const connectButton = document.getElementById(
+    "connectGoogleCalendarBtn"
+  );
+
+  if (!connectButton) {
+    console.error("Google Calendar button was not found.");
+    return;
+  }
+
+  if (
+    typeof google === "undefined" ||
+    !google.accounts ||
+    !google.accounts.oauth2
+  ) {
+    console.error("Google Identity Services did not load.");
+    return;
+  }
+
+  googleTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+
+    scope:
+      "https://www.googleapis.com/auth/calendar.readonly",
+
+    callback: response => {
+      if (response.error) {
+        console.error("Google connection error:", response);
+        alert("Google Calendar could not connect.");
+        return;
+      }
+
+      googleAccessToken = response.access_token;
+
+      connectButton.textContent = "✓ Calendar Connected";
+      connectButton.disabled = true;
+
+      alert("Google Calendar connected successfully!");
+
+      loadGoogleCalendar();
+    }
+  });
+
+  connectButton.addEventListener("click", () => {
+    googleTokenClient.requestAccessToken({
+      prompt: "consent"
+    });
+  });
+});
+
+async function loadGoogleCalendar() {
+  console.log("Google Calendar is ready to load.");
+}
