@@ -7,9 +7,36 @@ const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 
 const GOOGLE_CLIENT_ID =
 "962792348280-ft1u20jllo38g1gl4dj13r5jpknui4hl.apps.googleusercontent.com";
+const VENDOR_SHEETS = [
+  {
+    id: "14wl2grmU7oujyXdL26y4Cnj_LdFPWP9cBJWrODFTIJg",
+    tab: "SCCT Responses",
+    label: "SCCT Responses",
+    tracksStatus: true
+  },
+  {
+    id: "1ChK3bNiOrH3F7HJvoISA7RGxDRz5hppvShrsdNR5040",
+    tab: "Form Responses",
+    label: "Form Responses",
+    tracksStatus: true
+  },
+  {
+    id: "13Tkm7WVEDEDutJ9aSxc5jLAsag1mmIGvPuZimLXjx3M",
+    tab: "Form Responses 1",
+    label: "Form Responses 1",
+    tracksStatus: false
+  },
+  {
+    id: "1EBxEaGXicIDXSZdcDTCfc89nB36iR4xfi-cpGJrs9CI",
+    tab: "Volunteer Responses",
+    label: "Volunteer Responses",
+    tracksStatus: false
+  }
+];
 
 let googleTokenClient = null;
 let googleAccessToken = null;
+let vendorSheetData = null;
 
 const store = {
   get(key){ return JSON.parse(localStorage.getItem(key) || "[]"); },
@@ -213,10 +240,6 @@ function renderTodaysMission(){
 
   const alerts = store.get("alerts");
 
-  const applications = alerts.filter(
-    alert => alert.type === "Application"
-  );
-
   const followups = alerts.filter(
     alert =>
       alert.type === "General" ||
@@ -236,18 +259,7 @@ function renderTodaysMission(){
       : "Nothing scheduled";
   }
 
-  const vendorCount = document.getElementById("todayVendorCount");
-  const vendorSummary = document.getElementById("todayVendorSummary");
-
-  if(vendorCount){
-    vendorCount.textContent = applications.length;
-  }
-
-  if(vendorSummary){
-    vendorSummary.textContent = applications.length
-      ? applications[0].text
-      : "Nothing waiting";
-  }
+  renderVendorSheetSummaries();
 
   const followupCount = document.getElementById("todayFollowupCount");
   const followupSummary = document.getElementById("todayFollowupSummary");
@@ -312,8 +324,10 @@ window.addEventListener("load", () => {
   googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
 
-    scope:
+    scope: [
       "https://www.googleapis.com/auth/calendar.readonly",
+      "https://www.googleapis.com/auth/spreadsheets.readonly"
+    ].join(" "),
 
     callback: response => {
       if (response.error) {
@@ -324,12 +338,13 @@ window.addEventListener("load", () => {
 
       googleAccessToken = response.access_token;
 
-      connectButton.textContent = "✓ Calendar Connected";
+      connectButton.textContent = "✓ Google Connected";
       connectButton.disabled = true;
 
-      alert("Google Calendar connected successfully!");
+      alert("Google Calendar and Vendor Applications connected successfully!");
 
       loadGoogleCalendar();
+      loadVendorApplications();
     }
   });
 
@@ -342,4 +357,89 @@ window.addEventListener("load", () => {
 
 async function loadGoogleCalendar() {
   console.log("Google Calendar is ready to load.");
+}
+
+async function loadVendorApplications() {
+  const summaries = document.getElementById("vendorSheetSummaries");
+
+  if (summaries) {
+    summaries.innerHTML = "<p>Checking applications…</p>";
+  }
+
+  try {
+    const seenCounts = store.getObj("vendorSheetSeenCounts", {});
+    vendorSheetData = await Promise.all(
+      VENDOR_SHEETS.map(sheet => loadVendorSheet(sheet, seenCounts))
+    );
+    store.setObj(
+      "vendorSheetSeenCounts",
+      Object.fromEntries(vendorSheetData.map(sheet => [sheet.id, sheet.total]))
+    );
+    renderTodaysMission();
+  } catch (error) {
+    console.error("Vendor applications could not be loaded:", error);
+    vendorSheetData = null;
+
+    if (summaries) {
+      summaries.innerHTML = "<p>Applications could not be loaded.</p>";
+    }
+  }
+}
+
+async function loadVendorSheet(sheet, seenCounts) {
+  const range = encodeURIComponent(`'${sheet.tab}'!A:ZZ`);
+  const response = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheet.id}/values/${range}`,
+    { headers: { Authorization: `Bearer ${googleAccessToken}` } }
+  );
+
+  if (!response.ok) {
+    throw new Error(`${sheet.label} returned ${response.status}`);
+  }
+
+  const { values = [] } = await response.json();
+  const [headers = [], ...allRows] = values;
+  const rows = allRows.filter(row => row.some(cell => String(cell).trim()));
+  const total = rows.length;
+
+  if (!sheet.tracksStatus) {
+    const hasPreviousCount = Object.prototype.hasOwnProperty.call(seenCounts, sheet.id);
+    return {
+      ...sheet,
+      total,
+      paid: null,
+      attention: hasPreviousCount
+        ? Math.max(total - Number(seenCounts[sheet.id] || 0), 0)
+        : 0
+    };
+  }
+
+  const statusIndex = headers.findIndex(
+    value => String(value).replace(/\*/g, "").trim().toLowerCase() === "status"
+  );
+
+  if (statusIndex === -1) {
+    throw new Error(`The Status column was not found in ${sheet.label}`);
+  }
+
+  const statuses = rows.map(row => String(row[statusIndex] || "").trim());
+  return {
+    ...sheet,
+    total,
+    paid: statuses.filter(status => /\bpaid\b/i.test(status)).length,
+    attention: statuses.filter(status => !status).length
+  };
+}
+
+function renderVendorSheetSummaries() {
+  const summaries = document.getElementById("vendorSheetSummaries");
+  if (!summaries || !vendorSheetData) return;
+
+  summaries.innerHTML = vendorSheetData.map(sheet => {
+    const paid = sheet.paid === null ? "" : ` · ${sheet.paid} paid`;
+    return `<div class="vendor-sheet-row">
+      <strong>${escapeHtml(sheet.label)}</strong>
+      <span>${sheet.total} total${paid} · ${sheet.attention} need attention</span>
+    </div>`;
+  }).join("");
 }

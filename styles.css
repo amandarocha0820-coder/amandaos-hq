@@ -949,6 +949,32 @@ main{
 
 }
 
+.vendor-sheet-summaries{
+    display:grid;
+    gap:8px;
+}
+
+.vendor-sheet-row{
+    padding-top:8px;
+    border-top:1px solid #DDD1F0;
+}
+
+.vendor-sheet-row:first-child{
+    padding-top:0;
+    border-top:0;
+}
+
+.vendor-sheet-row strong,
+.vendor-sheet-row span{
+    display:block;
+}
+
+.vendor-sheet-row span{
+    margin-top:2px;
+    color:#6f6880;
+    font-size:.86rem;
+}
+
 @media(max-width:1000px){
 
 .today-grid{
