@@ -72,23 +72,26 @@
 
     <div class="today-grid">
 
-       <div class="today-box appointments-box">
+<div class="today-box appointments-box">
+
   <div class="today-box-header">
+
     <h3>📅 Appointments</h3>
 
     <div class="appointment-buttons">
+
+      <span
+        id="googleCalendarStatus"
+        class="calendar-sync-status"
+      >
+        ⚪ Not Synced
+      </span>
+
       <button
         class="small-btn"
         type="button"
         data-open="allAppointmentsModal"
       >
-      <button
-  class="small-btn"
-  type="button"
-  id="connectGoogleCalendarBtn"
->
-  Connect Google Calendar
-</button>
         View All
       </button>
 
@@ -100,15 +103,26 @@
       >
         ＋
       </button>
+
     </div>
+
   </div>
 
   <strong id="todayAppointmentCount">0</strong>
 
-  <p class="next-label">NEXT APPOINTMENT</p>
-  <p id="todayNextAppointment">Nothing scheduled</p>
+  <p class="next-label">
+    NEXT APPOINTMENT
+  </p>
 
-  <div id="todayAppointmentList" class="appointment-list"></div>
+  <p id="todayNextAppointment">
+    Nothing scheduled
+  </p>
+
+  <div
+    id="todayAppointmentList"
+    class="appointment-list"
+  ></div>
+
 </div>
 
         <div class="today-box">
