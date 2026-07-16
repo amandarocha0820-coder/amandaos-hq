@@ -49,9 +49,14 @@ const monthKey = d => new Date(d + "T12:00:00").toISOString().slice(0,7);
 const currentMonth = () => new Date().toISOString().slice(0,7);
 const money = n => Number(n || 0).toLocaleString("en-US",{style:"currency",currency:"USD"});
 const uid = () => crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random());
+const localDateKey = (date = new Date()) => [
+  date.getFullYear(),
+  String(date.getMonth() + 1).padStart(2, "0"),
+  String(date.getDate()).padStart(2, "0")
+].join("-");
 
 function setTodayDefaults(){
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateKey();
   $$('input[type="date"]').forEach(i => { if(!i.value) i.value = today; });
   const now = new Date();
   $("#todayDate").textContent = now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
@@ -227,7 +232,7 @@ $("#clearAllData").addEventListener("click",()=>{
   if(confirm("Clear all prototype data from this browser?")){ localStorage.clear(); renderAll(); }
 });
 function renderTodaysMission(){
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateKey();
 
   const events = store
     .get("events")
