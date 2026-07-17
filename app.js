@@ -33,10 +33,16 @@ const VENDOR_SHEETS = [
     tracksStatus: false
   }
 ];
+const CALLAHAN_SHEET_ID = "1oYfYyxDXkxhayq184OUoVD-wTcK6vUcGrvuaNwe9UZ0";
+const CALLAHAN_SHEET_HEADERS = [
+  "Date", "Item", "Type", "Store", "Amount", "Paid By", "Notes",
+  "Receipt Photo Taken", "Filed in Receipt Box", "Date Added"
+];
 
 let googleTokenClient = null;
 let googleAccessToken = null;
 let vendorSheetData = null;
+let callahanSheetSyncPromise = null;
 
 const store = {
   get(key){ return JSON.parse(localStorage.getItem(key) || "[]"); },
@@ -82,7 +88,7 @@ $$(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
   document.getElementById(btn.dataset.view).classList.add("active-view");
 }));
 
-function handleForm(formId, key, mapper){
+function handleForm(formId, key, mapper, afterSave){
   const form = document.getElementById(formId);
   form.addEventListener("submit", e=>{
     e.preventDefault();
@@ -90,6 +96,7 @@ function handleForm(formId, key, mapper){
     const item = mapper(fd);
     const data = store.get(key); data.unshift(item); store.set(key,data);
     form.reset(); form.closest("dialog").close(); setTodayDefaults(); renderAll();
+    if(afterSave) afterSave(item);
   });
 }
 
@@ -97,7 +104,7 @@ handleForm("callahanForm","callahanPurchases",fd=>({
   id:uid(), item:fd.get("item"), amount:Number(fd.get("amount")), store:fd.get("store"),
   type:fd.get("type"), date:fd.get("date"), paidBy:fd.get("paidBy"), notes:fd.get("notes"),
   photoTaken:fd.get("photoTaken")==="on", filed:fd.get("filed")==="on"
-}));
+}), queueCallahanPurchase);
 
 handleForm("businessPurchaseForm","businessPurchases",fd=>({
   id:uid(), merchant:fd.get("merchant"), amount:Number(fd.get("amount")), description:fd.get("description"),
@@ -332,7 +339,7 @@ window.addEventListener("load", () => {
 
     scope: [
       "https://www.googleapis.com/auth/calendar.readonly",
-      "https://www.googleapis.com/auth/spreadsheets.readonly"
+      "https://www.googleapis.com/auth/spreadsheets"
     ].join(" "),
 
     callback: response => {
@@ -348,10 +355,11 @@ window.addEventListener("load", () => {
       connectButton.textContent = "✓ Synced";
       connectButton.disabled = true;
 
-      alert("Google Calendar and Vendor Applications connected successfully!");
+      alert("Google services connected successfully!");
 
       loadGoogleCalendar();
       loadVendorApplications();
+      flushCallahanSheetQueue();
     }
   });
 
@@ -376,6 +384,105 @@ function requestGoogleAccess() {
 
 async function loadGoogleCalendar() {
   console.log("Google Calendar is ready to load.");
+}
+
+function queueCallahanPurchase(item) {
+  const queue = store.get("callahanSheetQueue");
+  queue.push({ ...item, createdAt: new Date().toISOString() });
+  store.set("callahanSheetQueue", queue);
+
+  if (!googleAccessToken) {
+    alert("Saved in Panda HQ. Sync Google to send this purchase to Sheets.");
+    return;
+  }
+
+  flushCallahanSheetQueue()
+    .then(synced => {
+      if (synced) alert("Saved in Panda HQ and Google Sheets.");
+    });
+}
+
+async function flushCallahanSheetQueue() {
+  if (!googleAccessToken) return;
+  if (callahanSheetSyncPromise) return callahanSheetSyncPromise;
+
+  callahanSheetSyncPromise = (async () => {
+    await ensureCallahanSheetHeaders();
+    const queue = store.get("callahanSheetQueue");
+
+    while (queue.length) {
+      await appendCallahanPurchase(queue[0]);
+      queue.shift();
+      store.set("callahanSheetQueue", queue);
+    }
+    return true;
+  })()
+    .catch(error => {
+      console.error("Callahan purchases could not be synced:", error);
+      alert("The purchase is saved in Panda HQ but could not be sent to Google Sheets yet.");
+      return false;
+    })
+    .finally(() => {
+      callahanSheetSyncPromise = null;
+    });
+
+  return callahanSheetSyncPromise;
+}
+
+async function ensureCallahanSheetHeaders() {
+  const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${CALLAHAN_SHEET_ID}/values/A1:J1`;
+  const response = await fetch(endpoint, {
+    headers: { Authorization: `Bearer ${googleAccessToken}` }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Callahan sheet returned ${response.status}`);
+  }
+
+  const { values = [] } = await response.json();
+  if (values.length) return;
+
+  const updateResponse = await fetch(`${endpoint}?valueInputOption=RAW`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${googleAccessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ values: [CALLAHAN_SHEET_HEADERS] })
+  });
+
+  if (!updateResponse.ok) {
+    throw new Error(`Callahan sheet headers returned ${updateResponse.status}`);
+  }
+}
+
+async function appendCallahanPurchase(item) {
+  const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${CALLAHAN_SHEET_ID}/values/A:J:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${googleAccessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      values: [[
+        item.date,
+        item.item,
+        item.type,
+        item.store || "",
+        item.amount,
+        item.paidBy || "",
+        item.notes || "",
+        item.photoTaken ? "Yes" : "No",
+        item.filed ? "Yes" : "No",
+        item.createdAt
+      ]]
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Callahan sheet append returned ${response.status}`);
+  }
 }
 
 async function loadVendorApplications() {
