@@ -337,6 +337,7 @@ window.addEventListener("load", () => {
     callback: response => {
       if (response.error) {
         console.error("Google connection error:", response);
+        setVendorSyncStatus("error", "🔴 Sync failed");
         alert("Google Calendar could not connect.");
         return;
       }
@@ -366,6 +367,7 @@ async function loadGoogleCalendar() {
 
 async function loadVendorApplications() {
   const summaries = document.getElementById("vendorSheetSummaries");
+  setVendorSyncStatus("syncing", "🟡 Syncing…");
 
   if (summaries) {
     summaries.innerHTML = "<p>Checking applications…</p>";
@@ -381,14 +383,24 @@ async function loadVendorApplications() {
       Object.fromEntries(vendorSheetData.map(sheet => [sheet.id, sheet.total]))
     );
     renderTodaysMission();
+    setVendorSyncStatus("success", "🟢 Synced");
   } catch (error) {
     console.error("Vendor applications could not be loaded:", error);
     vendorSheetData = null;
+    setVendorSyncStatus("error", "🔴 Sync failed");
 
     if (summaries) {
       summaries.innerHTML = "<p>Applications could not be loaded.</p>";
     }
   }
+}
+
+function setVendorSyncStatus(status, label) {
+  const syncStatus = document.getElementById("vendorSyncStatus");
+  if (!syncStatus) return;
+
+  syncStatus.dataset.status = status;
+  syncStatus.textContent = label;
 }
 
 async function loadVendorSheet(sheet, seenCounts) {
