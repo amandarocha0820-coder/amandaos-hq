@@ -957,10 +957,27 @@ main{
 
 .vendor-sync-status{
     flex:none;
+    width:auto;
+    min-width:0;
+    margin:0;
+    padding:0;
+    border:0;
+    background:transparent;
     color:#746b85;
+    cursor:pointer;
     font-size:.78rem;
     font-weight:700;
     white-space:nowrap;
+}
+
+.vendor-sync-status:focus-visible{
+    outline:2px solid #7c59d8;
+    outline-offset:3px;
+}
+
+.vendor-sync-status:disabled{
+    cursor:wait;
+    opacity:.8;
 }
 
 .vendor-sync-status[data-status="success"]{

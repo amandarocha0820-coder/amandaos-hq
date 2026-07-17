@@ -311,6 +311,7 @@ window.addEventListener("load", () => {
   const connectButton = document.getElementById(
     "connectGoogleCalendarBtn"
   );
+  const vendorSyncButton = document.getElementById("vendorSyncStatus");
 
   if (!connectButton) {
     console.error("Google Calendar button was not found.");
@@ -354,12 +355,24 @@ window.addEventListener("load", () => {
     }
   });
 
-  connectButton.addEventListener("click", () => {
-    googleTokenClient.requestAccessToken({
-      prompt: "consent"
-    });
-  });
+  connectButton.addEventListener("click", requestGoogleAccess);
+
+  if (vendorSyncButton) {
+    vendorSyncButton.addEventListener("click", requestGoogleAccess);
+  }
 });
+
+function requestGoogleAccess() {
+  if (!googleTokenClient) {
+    setVendorSyncStatus("error", "🔴 Sync failed");
+    return;
+  }
+
+  setVendorSyncStatus("syncing", "🟡 Syncing…");
+  googleTokenClient.requestAccessToken({
+    prompt: googleAccessToken ? "" : "consent"
+  });
+}
 
 async function loadGoogleCalendar() {
   console.log("Google Calendar is ready to load.");
@@ -401,6 +414,8 @@ function setVendorSyncStatus(status, label) {
 
   syncStatus.dataset.status = status;
   syncStatus.textContent = label;
+  syncStatus.disabled = status === "syncing";
+  syncStatus.setAttribute("aria-busy", status === "syncing" ? "true" : "false");
 }
 
 async function loadVendorSheet(sheet, seenCounts) {
