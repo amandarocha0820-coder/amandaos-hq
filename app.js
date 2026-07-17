@@ -345,7 +345,7 @@ window.addEventListener("load", () => {
 
       googleAccessToken = response.access_token;
 
-      connectButton.textContent = "✓ Google Connected";
+      connectButton.textContent = "✓ Synced";
       connectButton.disabled = true;
 
       alert("Google Calendar and Vendor Applications connected successfully!");
