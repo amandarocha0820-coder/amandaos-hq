@@ -152,12 +152,6 @@ handleForm("taskForm","tasks",fd=>({id:uid(), text:fd.get("text"), dueDate:fd.ge
 handleForm("eventForm","events",fd=>({id:uid(), title:fd.get("title"), date:fd.get("date"), time:fd.get("time"), location:fd.get("location")}));
 handleForm("alertForm","alerts",fd=>({id:uid(), text:fd.get("text"), type:fd.get("type"), created:new Date().toISOString()}));
 
-$("#taxForm").addEventListener("submit",e=>{
-  e.preventDefault(); const fd=new FormData(e.currentTarget);
-  store.setObj("taxSetup",{label:fd.get("label"),dueDay:Number(fd.get("dueDay")),status:fd.get("status")});
-  e.currentTarget.closest("dialog").close(); renderAll();
-});
-
 $("#weeklyRewardForm").addEventListener("submit",e=>{
   e.preventDefault();
   const fd=new FormData(e.currentTarget);
@@ -401,13 +395,6 @@ function renderAlerts(){
   $("#alertsList").innerHTML=all.length?all.slice(0,6).map((x,i)=>`<div class="list-item"><div><b>${escapeHtml(x.type)}</b><small style="display:block">${escapeHtml(x.text)}</small></div>${i<manual.length?`<button class="icon-btn" onclick="deleteItem('alerts','${x.id}')">×</button>`:""}</div>`).join(""):`Nothing urgent. Nice!`;
 }
 
-function renderTax(){
-  const t=store.getObj("taxSetup",null);
-  if(!t){ $("#taxStatusCard").innerHTML=`<span class="status red"></span><div><b>Not configured</b><small>Add your due date and checklist.</small></div>`; return; }
-  const cls=t.status==="Filed"?"green":t.status==="In Progress"?"yellow":"red";
-  $("#taxStatusCard").innerHTML=`<span class="status ${cls}"></span><div><b>${escapeHtml(t.label)} — ${escapeHtml(t.status)}</b><small>Due day ${t.dueDay} each month.</small></div>`;
-}
-
 function escapeHtml(s=""){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
 
 function exportCsv(key, filename, headers, rowsFn){
@@ -506,7 +493,6 @@ function renderAll(){
   renderTasks();
   renderEvents();
   renderAlerts();
-  renderTax();
   renderTodaysMission();
 }renderAll();
 // ======================================
