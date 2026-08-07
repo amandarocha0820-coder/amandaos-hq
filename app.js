@@ -82,10 +82,17 @@ $$('.modal button[value="cancel"]').forEach(button => {
 });
 $$("[data-jump]").forEach(b=>b.addEventListener("click",()=>{ $("#quickCaptureModal").close(); openModal(b.dataset.jump); }));
 
-$$(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
-  $$(".nav-btn").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
-  $$(".view").forEach(v=>v.classList.remove("active-view"));
+$(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  $(".nav-btn").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
+  $(".view").forEach(v=>v.classList.remove("active-view"));
   document.getElementById(btn.dataset.view).classList.add("active-view");
+}));
+
+$(".money-tab").forEach(btn=>btn.addEventListener("click",()=>{
+  $(".money-tab").forEach(x=>x.classList.remove("active"));
+  $(".money-panel").forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(btn.dataset.moneyPanel).classList.add("active");
 }));
 
 function handleForm(formId, key, mapper, afterSave){
@@ -106,10 +113,20 @@ handleForm("callahanForm","callahanPurchases",fd=>({
   photoTaken:fd.get("photoTaken")==="on", filed:fd.get("filed")==="on"
 }), queueCallahanPurchase);
 
-handleForm("businessPurchaseForm","businessPurchases",fd=>({
-  id:uid(), merchant:fd.get("merchant"), amount:Number(fd.get("amount")), description:fd.get("description"),
-  business:fd.get("business"), date:fd.get("date"), category:fd.get("category"),
-  photoTaken:fd.get("photoTaken")==="on", filed:fd.get("filed")==="on", reviewed:fd.get("reviewed")==="on"
+handleForm("paycheckForm","paychecks",fd=>({
+  id:uid(), date:fd.get("date"), source:fd.get("source"), gross:Number(fd.get("gross")),
+  deductions:Number(fd.get("deductions")), truck:Number(fd.get("truck")), net:Number(fd.get("net")), notes:fd.get("notes")
+}));
+
+handleForm("billForm","bills",fd=>({
+  id:uid(), name:fd.get("name"), amount:Number(fd.get("amount")), dueDate:fd.get("dueDate"),
+  frequency:fd.get("frequency"), category:fd.get("category"),
+  autoPay:fd.get("autoPay")==="on", paid:fd.get("paid")==="on"
+}));
+
+handleForm("spendingForm","spending",fd=>({
+  id:uid(), description:fd.get("description"), amount:Number(fd.get("amount")), date:fd.get("date"),
+  category:fd.get("category"), flexibility:fd.get("flexibility"), notes:fd.get("notes")
 }));
 
 handleForm("brainForm","brainItems",fd=>({id:uid(), text:fd.get("text"), bucket:fd.get("bucket"), created:new Date().toISOString()}));
@@ -127,7 +144,8 @@ function deleteItem(key,id){ store.set(key,store.get(key).filter(x=>x.id!==id));
 function toggleTask(id){ const t=store.get("tasks"); const x=t.find(x=>x.id===id); if(x)x.done=!x.done; store.set("tasks",t); renderAll(); }
 function markFiled(key,id){ const a=store.get(key); const x=a.find(x=>x.id===id); if(x)x.filed=true; store.set(key,a); renderAll(); }
 
-window.deleteItem=deleteItem; window.toggleTask=toggleTask; window.markFiled=markFiled;
+function toggleBill(id){ const bills=store.get("bills"); const bill=bills.find(x=>x.id===id); if(bill) bill.paid=!bill.paid; store.set("bills",bills); renderAll(); }
+window.deleteItem=deleteItem; window.toggleTask=toggleTask; window.markFiled=markFiled; window.toggleBill=toggleBill;
 
 function renderCallahan(){
   const all=store.get("callahanPurchases"), month=all.filter(x=>monthKey(x.date)===currentMonth());
@@ -142,18 +160,48 @@ function renderCallahan(){
     `<tr><td colspan="7" class="empty-state">No purchases recorded yet.</td></tr>`;
 }
 
-function renderBusiness(){
-  const all=store.get("businessPurchases"), month=all.filter(x=>monthKey(x.date)===currentMonth());
-  const total=month.reduce((s,x)=>s+x.amount,0), review=all.filter(x=>!x.reviewed||x.category==="Needs Review").length, unfiled=all.filter(x=>!x.filed).length;
-  $("#businessPurchaseTotal").textContent=money(total); $("#businessNeedsReview").textContent=review;
-  $("#businessPageTotal").textContent=money(total); $("#businessPageReview").textContent=review; $("#businessPageUnfiled").textContent=unfiled;
-  $("#bookkeepingStatus").textContent=review?`${review} to review`:"Caught up";
-  $("#bookkeepingPreview").innerHTML=all.slice(0,3).map(x=>`<div class="list-item"><span>${escapeHtml(x.merchant)}</span><b>${money(x.amount)}</b></div>`).join("") || `<div class="empty-state">No purchases yet.</div>`;
-  $("#businessTableBody").innerHTML=all.length?all.map(x=>`<tr>
-    <td>${x.date}</td><td>${escapeHtml(x.merchant)}</td><td>${escapeHtml(x.description)}</td><td>${escapeHtml(x.business)}</td>
-    <td>${money(x.amount)}</td><td>${x.reviewed&&x.filed?"✅ Complete":x.filed?"🟡 Review":"🟠 File receipt"}</td>
-    <td><button class="icon-btn" onclick="deleteItem('businessPurchases','${x.id}')">×</button></td></tr>`).join("") :
-    `<tr><td colspan="7" class="empty-state">No purchases recorded yet.</td></tr>`;
+function renderMoney(){
+  const paychecks=store.get("paychecks"), bills=store.get("bills"), spending=store.get("spending");
+  const month=currentMonth();
+  const monthPaychecks=paychecks.filter(x=>monthKey(x.date)===month);
+  const monthBills=bills.filter(x=>monthKey(x.dueDate)===month);
+  const monthSpending=spending.filter(x=>monthKey(x.date)===month);
+  const income=monthPaychecks.reduce((sum,x)=>sum+x.net,0);
+  const billsTotal=monthBills.reduce((sum,x)=>sum+x.amount,0);
+  const billsDue=monthBills.filter(x=>!x.paid).reduce((sum,x)=>sum+x.amount,0);
+  const spent=monthSpending.reduce((sum,x)=>sum+x.amount,0);
+  const available=income-billsTotal-spent;
+  const required=monthSpending.filter(x=>x.flexibility==="Required").reduce((sum,x)=>sum+x.amount,0);
+  const adjustable=monthSpending.filter(x=>x.flexibility==="Necessary but adjustable").reduce((sum,x)=>sum+x.amount,0);
+  const flexible=monthSpending.filter(x=>x.flexibility==="Flexible").reduce((sum,x)=>sum+x.amount,0);
+  const categoryTotals={};
+  monthSpending.forEach(x=>categoryTotals[x.category]=(categoryTotals[x.category]||0)+x.amount);
+  monthBills.forEach(x=>categoryTotals[x.category]=(categoryTotals[x.category]||0)+x.amount);
+  const pressure=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1])[0];
+
+  $("#moneyIncomeTotal").textContent=money(income);
+  $("#moneyBillsDue").textContent=money(billsDue);
+  $("#moneyAvailable").textContent=money(available);
+  $("#moneyAvailable").classList.toggle("negative-money",available<0);
+  $("#moneyPressure").textContent=pressure?`${pressure[0]} · ${money(pressure[1])}`:"Add spending";
+  $("#dashboardBillsDue").textContent=money(billsDue);
+  $("#dashboardMoneyLeft").textContent=money(available);
+  $("#moneyStatus").textContent=billsDue?money(billsDue)+" still due":monthBills.length?"Bills covered":"Add bills to begin";
+  $("#moneyPreview").innerHTML=monthBills.filter(x=>!x.paid).sort((a,b)=>a.dueDate.localeCompare(b.dueDate)).slice(0,2)
+    .map(x=>`<div class="list-item"><span>${escapeHtml(x.name)}<small style="display:block">Due ${x.dueDate}</small></span><b>${money(x.amount)}</b></div>`).join("")
+    || `<div class="empty-state">${monthBills.length?"This month's bills are covered.":"Add bills to see what is due."}</div>`;
+
+  $("#paycheckTableBody").innerHTML=paychecks.length?paychecks.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(x.source)}</td><td>${money(x.gross)}</td><td>${money(x.deductions+x.truck)}</td><td><b>${money(x.net)}</b></td><td><button class="icon-btn" onclick="deleteItem('paychecks','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">Add your first paycheck to begin planning.</td></tr>`;
+  $("#billTableBody").innerHTML=bills.length?bills.map(x=>`<tr><td>${x.dueDate}</td><td>${escapeHtml(x.name)}<small style="display:block">${escapeHtml(x.category)}</small></td><td>${money(x.amount)}</td><td>${escapeHtml(x.frequency)}</td><td>${x.autoPay?"Yes":"No"}</td><td><button class="small-btn" onclick="toggleBill('${x.id}')">${x.paid?"✅ Paid":"Mark paid"}</button></td><td><button class="icon-btn" onclick="deleteItem('bills','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="7" class="empty-state">No bills entered yet.</td></tr>`;
+  $("#spendingTableBody").innerHTML=spending.length?spending.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(x.description)}</td><td>${escapeHtml(x.category)}</td><td>${escapeHtml(x.flexibility)}</td><td>${money(x.amount)}</td><td><button class="icon-btn" onclick="deleteItem('spending','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">Add spending to find the pressure points.</td></tr>`;
+
+  $("#pressureHeading").textContent=pressure?`Biggest pressure: ${pressure[0]}`:"Add your money details";
+  $("#pressureCopy").textContent=pressure?`${money(pressure[1])} has gone to ${pressure[0]} this month. Flexible spending totals ${money(flexible)}.`:"Once paychecks, bills, and spending are entered, AmandaOS will show where the pressure is coming from.";
+  $("#budgetFlow").innerHTML=[
+    ["Take-home income",income],["Bills",billsTotal],["Required spending",required],
+    ["Adjustable spending",adjustable],["Flexible spending",flexible],["Remaining",available]
+  ].map(([label,value])=>`<div><span>${label}</span><b class="${value<0?"negative-money":""}">${money(value)}</b></div>`).join("");
+  $("#categoryBreakdown").innerHTML=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1]).map(([label,value])=>`<div><span>${escapeHtml(label)}</span><b>${money(value)}</b></div>`).join("")||`<p class="muted">No spending entered yet.</p>`;
 }
 
 function renderBrain(){
@@ -189,12 +237,11 @@ function renderEvents(){
 function renderAlerts(){
   const manual=store.get("alerts");
   const callahanUnfiled=store.get("callahanPurchases").filter(x=>!x.filed).length;
-  const businessUnfiled=store.get("businessPurchases").filter(x=>!x.filed).length;
-  const businessReview=store.get("businessPurchases").filter(x=>!x.reviewed||x.category==="Needs Review").length;
+  const today=localDateKey();
+  const overdueBills=store.get("bills").filter(x=>!x.paid&&x.dueDate<today);
   const generated=[];
   if(callahanUnfiled) generated.push({text:`${callahanUnfiled} Callahan receipt${callahanUnfiled===1?"":"s"} still need the receipt box.`,type:"Receipt"});
-  if(businessUnfiled) generated.push({text:`${businessUnfiled} business receipt${businessUnfiled===1?"":"s"} still need filing.`,type:"Bookkeeping"});
-  if(businessReview) generated.push({text:`${businessReview} business purchase${businessReview===1?"":"s"} need review.`,type:"Bookkeeping"});
+  if(overdueBills.length) generated.push({text:`${overdueBills.length} bill${overdueBills.length===1?" is":"s are"} overdue, totaling ${money(overdueBills.reduce((sum,x)=>sum+x.amount,0))}.`,type:"Bills"});
   const all=[...manual,...generated];
   $("#alertCount").textContent=all.length;
   $("#alertsList").innerHTML=all.length?all.slice(0,6).map((x,i)=>`<div class="list-item"><div><b>${escapeHtml(x.type)}</b><small style="display:block">${escapeHtml(x.text)}</small></div>${i<manual.length?`<button class="icon-btn" onclick="deleteItem('alerts','${x.id}')">×</button>`:""}</div>`).join(""):`Nothing urgent. Nice!`;
@@ -218,10 +265,6 @@ function exportCsv(key, filename, headers, rowsFn){
 $("#exportCallahanCsv").addEventListener("click",()=>exportCsv("callahanPurchases","callahan-purchases.csv",
   ["Date","Item","Type","Store","Amount","Paid By","Photo Taken","Receipt Filed","Notes"],
   x=>[x.date,x.item,x.type,x.store,x.amount,x.paidBy,x.photoTaken,x.filed,x.notes]));
-$("#exportBusinessCsv").addEventListener("click",()=>exportCsv("businessPurchases","business-purchases.csv",
-  ["Date","Merchant","Description","Business","Category","Amount","Photo Taken","Receipt Filed","Reviewed"],
-  x=>[x.date,x.merchant,x.description,x.business,x.category,x.amount,x.photoTaken,x.filed,x.reviewed]));
-
 $("#morningBriefBtn").addEventListener("click",()=>{
   const tasks=store.get("tasks").filter(x=>!x.done).length, alerts=Number($("#alertCount").textContent),
   events=store.get("events").filter(x=>x.date===new Date().toISOString().slice(0,10)).length,
@@ -302,7 +345,7 @@ function renderTodaysMission(){
 function renderAll(){
   setTodayDefaults();
   renderCallahan();
-  renderBusiness();
+  renderMoney();
   renderBrain();
   renderTasks();
   renderEvents();
