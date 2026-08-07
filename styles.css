@@ -1416,3 +1416,93 @@ grid-template-columns:1fr;
     grid-template-columns:1fr;
   }
 }
+
+
+/* TASK & WEIGHT TRENDS */
+.trend-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+}
+.trend-heading h3,
+.trend-heading h4{
+  margin:5px 0 0;
+}
+.trend-heading > span{
+  color:var(--muted);
+  font-size:12px;
+  text-align:right;
+}
+.momentum-trend{
+  margin-top:22px;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+}
+.daily-task-trend{
+  display:grid;
+  gap:9px;
+  margin-top:15px;
+}
+.daily-trend-row{
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) 46px;
+  gap:10px;
+  align-items:center;
+}
+.daily-trend-row > span,
+.daily-trend-row > strong{
+  font-size:12px;
+  color:var(--muted);
+}
+.daily-trend-row > strong{
+  text-align:right;
+}
+.daily-trend-bar{
+  height:15px;
+  display:flex;
+  border-radius:999px;
+  overflow:hidden;
+  background:#d84f5f;
+  box-shadow:inset 0 0 0 1px rgba(80,30,40,.08);
+}
+.daily-trend-bar i{
+  display:block;
+  background:#35a968;
+}
+.daily-trend-bar b{
+  display:block;
+  background:#d84f5f;
+}
+.weight-trend-card{
+  margin-bottom:14px;
+}
+.weight-chart-shell{
+  position:relative;
+  min-height:280px;
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fcfaff;
+  overflow:hidden;
+}
+#weightTrendCanvas{
+  display:none;
+  width:100%;
+  height:280px;
+}
+.weight-trend-empty{
+  min-height:280px;
+  place-items:center;
+  padding:24px;
+  color:var(--muted);
+  text-align:center;
+}
+@media(max-width:650px){
+  .trend-heading{
+    flex-direction:column;
+  }
+  .trend-heading > span{
+    text-align:left;
+  }
+}
