@@ -149,6 +149,15 @@ $("#taxForm").addEventListener("submit",e=>{
   e.currentTarget.closest("dialog").close(); renderAll();
 });
 
+$("#momentumGoalForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const fd=new FormData(e.currentTarget);
+  const goal=Math.max(1,Math.min(100,Number(fd.get("goal"))||80));
+  store.setObj("momentumGoal",{percent:goal});
+  e.currentTarget.closest("dialog").close();
+  renderMomentum();
+});
+
 function deleteItem(key,id){ store.set(key,store.get(key).filter(x=>x.id!==id)); renderAll(); }
 function toggleTask(id){ const t=store.get("tasks"); const x=t.find(x=>x.id===id); if(x)x.done=!x.done; store.set("tasks",t); renderAll(); }
 function markFiled(key,id){ const a=store.get(key); const x=a.find(x=>x.id===id); if(x)x.filed=true; store.set(key,a); renderAll(); }
@@ -279,6 +288,17 @@ function renderMomentum(){
   const total=occurrences.length;
   const done=occurrences.filter(x=>x.done).length;
   const percent=total?Math.round(done/total*100):0;
+  const goal=store.getObj("momentumGoal",{percent:80}).percent||80;
+  const goalCount=total?Math.ceil(total*goal/100):0;
+  const needed=Math.max(goalCount-done,0);
+  $("#momentumGoalButton").textContent=goal+"%";
+  $("#momentumGoalInput").value=goal;
+  $("#momentumGoalProgress").textContent=!total
+    ? `Your weekly goal is ${goal}%. Add routines to start the wheel.`
+    : needed===0
+      ? `Goal reached — ${percent}% green this week!`
+      : `Weekly goal: ${goal}% · Complete ${needed} more task${needed===1?"":"s"} to reach it.`;
+  $("#momentumGoalProgress").classList.toggle("reached",total>0&&needed===0);
   const chart=$("#momentumChart");
   if(total){
     const step=360/total;
