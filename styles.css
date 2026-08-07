@@ -1189,3 +1189,162 @@ grid-template-columns:1fr;
     width:100%;
   }
 }
+
+
+/* WEEKLY MOMENTUM WHEEL */
+.momentum-card{
+  margin:20px 0;
+}
+.momentum-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+}
+.momentum-heading h3{
+  margin:5px 0 4px;
+  font-size:24px;
+}
+.momentum-heading p{
+  margin:0;
+}
+.momentum-layout{
+  display:grid;
+  grid-template-columns:260px minmax(0,1fr);
+  gap:26px;
+  align-items:start;
+  margin-top:22px;
+}
+.momentum-chart-wrap{
+  text-align:center;
+  position:sticky;
+  top:24px;
+}
+.momentum-chart{
+  width:220px;
+  height:220px;
+  margin:0 auto 12px;
+  border-radius:50%;
+  background:#d84f5f;
+  position:relative;
+  display:grid;
+  place-items:center;
+  box-shadow:0 12px 28px rgba(130,53,66,.20);
+  transition:background .25s ease;
+}
+.momentum-chart::before{
+  content:"";
+  position:absolute;
+  width:118px;
+  height:118px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+.momentum-chart > div{
+  position:relative;
+  z-index:1;
+  display:grid;
+}
+.momentum-chart strong{
+  font-size:30px;
+  line-height:1;
+}
+.momentum-chart span{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:5px;
+}
+.momentum-chart-wrap p{
+  margin:0;
+  color:var(--muted);
+}
+.routine-week-list{
+  display:grid;
+  gap:12px;
+}
+.routine-day{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:13px;
+  background:#fbf9fd;
+}
+.routine-day-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:9px;
+}
+.routine-day-heading h4{
+  margin:0;
+  font-size:15px;
+}
+.routine-day-heading small{
+  color:var(--muted);
+}
+.routine-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-top:7px;
+  padding:10px 11px;
+  border:1px solid #d84f5f;
+  border-radius:11px;
+  background:#fff2f3;
+  color:#8e2634;
+}
+.routine-row.done{
+  border-color:#35a968;
+  background:#effaf3;
+  color:#226f47;
+}
+.routine-row label{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin:0;
+  cursor:pointer;
+}
+.routine-row input{
+  width:auto;
+  accent-color:#35a968;
+}
+.routine-delete{
+  border:0;
+  background:transparent;
+  color:inherit;
+  font-size:19px;
+  cursor:pointer;
+  opacity:.65;
+}
+.routine-empty{
+  min-height:180px;
+  display:grid;
+  place-content:center;
+  gap:6px;
+  text-align:center;
+}
+.routine-empty span{
+  display:block;
+}
+@media(max-width:850px){
+  .momentum-layout{
+    grid-template-columns:1fr;
+  }
+  .momentum-chart-wrap{
+    position:static;
+  }
+}
+@media(max-width:650px){
+  .momentum-heading{
+    flex-direction:column;
+  }
+  .momentum-heading button{
+    width:100%;
+  }
+  .momentum-chart{
+    width:190px;
+    height:190px;
+  }
+}
