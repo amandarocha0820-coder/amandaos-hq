@@ -1348,3 +1348,31 @@ grid-template-columns:1fr;
     height:190px;
   }
 }
+
+
+.momentum-heading-actions{
+  display:flex;
+  gap:9px;
+  align-items:center;
+}
+.momentum-goal-progress{
+  margin-top:16px;
+  padding:11px 14px;
+  border:1px solid #d84f5f;
+  border-radius:12px;
+  background:#fff2f3;
+  color:#8e2634;
+  font-weight:750;
+}
+.momentum-goal-progress.reached{
+  border-color:#35a968;
+  background:#effaf3;
+  color:#226f47;
+}
+@media(max-width:650px){
+  .momentum-heading-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+}
