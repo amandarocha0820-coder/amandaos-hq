@@ -202,6 +202,20 @@
           </article>
         </div>
 
+        <section class="momentum-card card">
+          <div class="momentum-heading">
+            <div><span class="card-label">WEEKLY MOMENTUM</span><h3>Turn the wheel green</h3><p class="muted">Every scheduled task starts red. Check it off to turn its piece green.</p></div>
+            <button class="primary-btn" data-open="routineModal">＋ Add Routine</button>
+          </div>
+          <div class="momentum-layout">
+            <div class="momentum-chart-wrap">
+              <div id="momentumChart" class="momentum-chart" role="img" aria-label="Weekly task completion pie chart"><div><strong id="momentumPercent">0%</strong><span>green</span></div></div>
+              <p><b id="momentumComplete">0</b> of <b id="momentumTotal">0</b> completed</p>
+            </div>
+            <div id="routineWeekList" class="routine-week-list"></div>
+          </div>
+        </section>
+
         <section class="quick-actions card">
           <div class="card-header">
             <div><span class="card-label">QUICK ACTIONS</span><h3>Capture it before it disappears</h3></div>
@@ -401,6 +415,16 @@
       </div>
       <label>Notes<textarea name="notes" rows="2"></textarea></label>
       <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Spending</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="routineModal" class="modal">
+    <form method="dialog" id="routineForm">
+      <div class="modal-header"><div><span class="card-label">WEEKLY MOMENTUM</span><h3>Add a Recurring Task</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>What needs to get done?<input name="text" required placeholder="Example: Put laundry away" /></label>
+      <label>When?<select name="schedule"><option>Daily</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option><option>Weekly</option></select></label>
+      <p class="muted">Daily creates one piece for every day. Weekly creates one piece that can be completed anytime before the week resets.</p>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Add to Wheel</button></div>
     </form>
   </dialog>
 
