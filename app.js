@@ -70,6 +70,29 @@ function setTodayDefaults(){
   $("#greeting").textContent = `${hr<12?"Good morning":hr<17?"Good afternoon":"Good evening"}, Amanda`;
 }
 
+function renderDailyAffirmation(){
+  const affirmations=[
+    "I only need to take the next right step.",
+    "Progress counts, even when it happens slowly.",
+    "I can build the life I want one completed task at a time.",
+    "Today does not require perfection—only honest effort.",
+    "I am allowed to begin again without judging yesterday.",
+    "Small actions are still movement toward something bigger.",
+    "I can be proud of what I finish and gentle about what remains.",
+    "My pace is valid, and my progress belongs to me.",
+    "I have handled difficult days before, and I can handle today.",
+    "Done is valuable, even when it is not perfect.",
+    "Rest and progress can exist in the same life.",
+    "I am creating systems that support me instead of shame me.",
+    "One green piece at a time is enough.",
+    "I deserve to celebrate the work I put into myself."
+  ];
+  const now=new Date();
+  const dayNumber=Math.floor(new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime()/86400000);
+  const target=$("#dailyAffirmation");
+  if(target) target.textContent=affirmations[dayNumber%affirmations.length];
+}
+
 function openModal(id){ const d = document.getElementById(id); if(d) d.showModal(); setTodayDefaults(); }
 $$("[data-open]").forEach(b=>b.addEventListener("click",()=>openModal(b.dataset.open)));
 $$("[data-close]").forEach(b=>b.addEventListener("click",()=>document.getElementById(b.dataset.close).close()));
@@ -222,7 +245,7 @@ function renderMoney(){
   $("#dashboardSentToPaul").textContent=money(transferred);
   $("#dashboardMoneyLeft").textContent=money(available);
   $("#dashboardMoneyLeft").classList.toggle("negative-money",available<0);
-  $("#moneyStatus").textContent=transferred?money(transferred)+" sent to Paul":income?"Paycheck recorded":"Add paycheck to begin";
+
   $("#moneyPreview").innerHTML=monthTransfers.slice(0,2).map(x=>`<div class="list-item"><span>${escapeHtml(x.purpose)}<small style="display:block">${x.date}</small></span><b>${money(x.amount)}</b></div>`).join("")
     || `<div class="empty-state">Record money sent to Paul here.</div>`;
 
@@ -532,6 +555,7 @@ function renderTodaysMission(){
 }
 function renderAll(){
   setTodayDefaults();
+  renderDailyAffirmation();
   renderCallahan();
   renderMoney();
   renderWeighIns();
