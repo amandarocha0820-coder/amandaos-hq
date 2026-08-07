@@ -166,7 +166,6 @@ $("#weeklyRewardForm").addEventListener("submit",e=>{
   rewards[mondayKey]=String(fd.get("reward")||"").trim();
   store.setObj("weeklyRewards",rewards);
   e.currentTarget.closest("dialog").close();
-  renderWeighIns();
   renderMomentum();
 });
 
@@ -501,6 +500,7 @@ function renderAll(){
   setTodayDefaults();
   renderCallahan();
   renderMoney();
+  renderWeighIns();
   renderMomentum();
   renderBrain();
   renderTasks();
