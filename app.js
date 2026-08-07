@@ -192,11 +192,71 @@ function toggleTask(id){ const t=store.get("tasks"); const x=t.find(x=>x.id===id
 function markFiled(key,id){ const a=store.get(key); const x=a.find(x=>x.id===id); if(x)x.filed=true; store.set(key,a); renderAll(); }
 
 function toggleBill(id){ const bills=store.get("bills"); const bill=bills.find(x=>x.id===id); if(bill) bill.paid=!bill.paid; store.set("bills",bills); renderAll(); }
+function currentMomentumStats(){
+  const routines=store.get("routineTasks"), completed=store.getObj("routineCompletions",{});
+  const today=new Date(), todayKey=dateKeyFromDate(today);
+  const weekdays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const todayName=weekdays[today.getDay()];
+  const dailyItems=routines.filter(task=>task.schedule==="Daily"||task.schedule===todayName)
+    .map(task=>({key:`${todayKey}:${task.id}`,done:!!completed[`${todayKey}:${task.id}`]}));
+  const monday=startOfWeek(today), weekKey=dateKeyFromDate(monday), weeklyItems=[];
+  routines.forEach(task=>{
+    if(task.schedule==="Daily"){
+      for(let index=0;index<7;index++){const date=new Date(monday);date.setDate(monday.getDate()+index);const key=`${dateKeyFromDate(date)}:${task.id}`;weeklyItems.push({key,done:!!completed[key]});}
+    }else if(task.schedule==="Weekly"){
+      const key=`${weekKey}:weekly:${task.id}`;weeklyItems.push({key,done:!!completed[key]});
+    }else{
+      const dayIndex=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].indexOf(task.schedule);
+      if(dayIndex>=0){const date=new Date(monday);date.setDate(monday.getDate()+dayIndex);const key=`${dateKeyFromDate(date)}:${task.id}`;weeklyItems.push({key,done:!!completed[key]});}
+    }
+  });
+  const percent=items=>items.length?Math.round(items.filter(x=>x.done).length/items.length*100):0;
+  return {todayKey,weekKey,dailyTotal:dailyItems.length,dailyPercent:percent(dailyItems),weeklyTotal:weeklyItems.length,weeklyPercent:percent(weeklyItems)};
+}
+function showCelebration(type,message){
+  const layer=$("#celebrationLayer"), toast=$("#celebrationToast");
+  if(!layer||!toast) return;
+  layer.querySelectorAll(".celebration-particle").forEach(x=>x.remove());
+  toast.textContent=message; toast.classList.add("show");
+  const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!reduced){
+    const count=type==="confetti"?42:20;
+    for(let index=0;index<count;index++){
+      const particle=document.createElement("span");
+      particle.className=`celebration-particle ${type}`;
+      particle.style.setProperty("--left",Math.round(Math.random()*100)+"%");
+      particle.style.setProperty("--delay",(Math.random()*.9).toFixed(2)+"s");
+      particle.style.setProperty("--duration",(type==="confetti"?3.8+Math.random()*2:3+Math.random()*2).toFixed(2)+"s");
+      particle.style.setProperty("--drift",Math.round(-45+Math.random()*90)+"px");
+      if(type==="confetti") particle.style.setProperty("--color",["#7c59d8","#111111","#35a968","#d84f5f","#f3bd4d"][index%5]);
+      layer.appendChild(particle);
+    }
+  }
+  setTimeout(()=>toast.classList.remove("show"),4200);
+  setTimeout(()=>layer.querySelectorAll(".celebration-particle").forEach(x=>x.remove()),6500);
+}
+function checkMomentumCelebrations(){
+  const stats=currentMomentumStats(), shown=store.getObj("momentumCelebrations",{});
+  const dailyKey=`day:${stats.todayKey}`, weeklyKey=`week:${stats.weekKey}`;
+  const wonDay=stats.dailyTotal>0&&stats.dailyPercent>=80&&!shown[dailyKey];
+  const wonWeek=stats.weeklyTotal>0&&stats.weeklyPercent>80&&!shown[weeklyKey];
+  if(wonDay){
+    shown[dailyKey]=true;
+    showCelebration("bubble",`🐼 You won today at ${stats.dailyPercent}%!`);
+  }
+  if(wonWeek){
+    shown[weeklyKey]=true;
+    setTimeout(()=>showCelebration("confetti",`🎉 Week won at ${stats.weeklyPercent}% — reward earned!`),wonDay?900:0);
+  }
+  store.setObj("momentumCelebrations",shown);
+}
+
 function toggleRoutineOccurrence(key){
   const completed=store.getObj("routineCompletions",{});
   completed[key]=!completed[key];
   store.setObj("routineCompletions",completed);
   renderMomentum();
+  checkMomentumCelebrations();
 }
 function deleteRoutine(id){
   store.set("routineTasks",store.get("routineTasks").filter(x=>x.id!==id));
