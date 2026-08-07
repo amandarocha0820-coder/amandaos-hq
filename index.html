@@ -205,8 +205,9 @@
         <section class="momentum-card card">
           <div class="momentum-heading">
             <div><span class="card-label">WEEKLY MOMENTUM</span><h3>Turn the wheel green</h3><p class="muted">Every scheduled task starts red. Check it off to turn its piece green.</p></div>
-            <button class="primary-btn" data-open="routineModal">＋ Add Routine</button>
+            <div class="momentum-heading-actions"><button class="ghost-btn" data-open="momentumGoalModal">Goal: <span id="momentumGoalButton">80%</span></button><button class="primary-btn" data-open="routineModal">＋ Add Routine</button></div>
           </div>
+          <div id="momentumGoalProgress" class="momentum-goal-progress">Complete tasks to begin working toward your weekly goal.</div>
           <div class="momentum-layout">
             <div class="momentum-chart-wrap">
               <div id="momentumChart" class="momentum-chart" role="img" aria-label="Weekly task completion pie chart"><div><strong id="momentumPercent">0%</strong><span>green</span></div></div>
@@ -415,6 +416,15 @@
       </div>
       <label>Notes<textarea name="notes" rows="2"></textarea></label>
       <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Spending</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="momentumGoalModal" class="modal">
+    <form method="dialog" id="momentumGoalForm">
+      <div class="modal-header"><div><span class="card-label">WEEKLY MOMENTUM</span><h3>Set Weekly Goal</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>Goal percentage<input id="momentumGoalInput" name="goal" type="number" min="1" max="100" step="1" value="80" required /></label>
+      <p class="muted">Choose the percentage of scheduled tasks you want to turn green this week. You can change it anytime.</p>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Goal</button></div>
     </form>
   </dialog>
 
