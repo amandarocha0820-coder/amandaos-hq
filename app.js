@@ -118,6 +118,11 @@ handleForm("paycheckForm","paychecks",fd=>({
   deductions:Number(fd.get("deductions")), truck:Number(fd.get("truck")), net:Number(fd.get("net")), notes:fd.get("notes")
 }));
 
+handleForm("transferForm","moneyTransfers",fd=>({
+  id:uid(), date:fd.get("date"), amount:Number(fd.get("amount")), paycheckId:fd.get("paycheckId"),
+  purpose:fd.get("purpose"), notes:fd.get("notes")
+}));
+
 handleForm("billForm","bills",fd=>({
   id:uid(), name:fd.get("name"), amount:Number(fd.get("amount")), dueDate:fd.get("dueDate"),
   frequency:fd.get("frequency"), category:fd.get("category"),
@@ -161,47 +166,57 @@ function renderCallahan(){
 }
 
 function renderMoney(){
-  const paychecks=store.get("paychecks"), bills=store.get("bills"), spending=store.get("spending");
+  const paychecks=store.get("paychecks"), transfers=store.get("moneyTransfers"), bills=store.get("bills"), spending=store.get("spending");
   const month=currentMonth();
   const monthPaychecks=paychecks.filter(x=>monthKey(x.date)===month);
+  const monthTransfers=transfers.filter(x=>monthKey(x.date)===month);
   const monthBills=bills.filter(x=>monthKey(x.dueDate)===month);
   const monthSpending=spending.filter(x=>monthKey(x.date)===month);
   const income=monthPaychecks.reduce((sum,x)=>sum+x.net,0);
-  const billsTotal=monthBills.reduce((sum,x)=>sum+x.amount,0);
+  const transferred=monthTransfers.reduce((sum,x)=>sum+x.amount,0);
+  const directBills=monthBills.filter(x=>x.paid).reduce((sum,x)=>sum+x.amount,0);
+  const directSpending=monthSpending.reduce((sum,x)=>sum+x.amount,0);
   const billsDue=monthBills.filter(x=>!x.paid).reduce((sum,x)=>sum+x.amount,0);
-  const spent=monthSpending.reduce((sum,x)=>sum+x.amount,0);
-  const available=income-billsTotal-spent;
-  const required=monthSpending.filter(x=>x.flexibility==="Required").reduce((sum,x)=>sum+x.amount,0);
-  const adjustable=monthSpending.filter(x=>x.flexibility==="Necessary but adjustable").reduce((sum,x)=>sum+x.amount,0);
-  const flexible=monthSpending.filter(x=>x.flexibility==="Flexible").reduce((sum,x)=>sum+x.amount,0);
+  const available=income-transferred-directBills-directSpending;
   const categoryTotals={};
+  monthTransfers.forEach(x=>categoryTotals[x.purpose]=(categoryTotals[x.purpose]||0)+x.amount);
   monthSpending.forEach(x=>categoryTotals[x.category]=(categoryTotals[x.category]||0)+x.amount);
-  monthBills.forEach(x=>categoryTotals[x.category]=(categoryTotals[x.category]||0)+x.amount);
+  monthBills.filter(x=>x.paid).forEach(x=>categoryTotals[x.category]=(categoryTotals[x.category]||0)+x.amount);
   const pressure=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1])[0];
+  const flexible=monthSpending.filter(x=>x.flexibility==="Flexible").reduce((sum,x)=>sum+x.amount,0);
 
   $("#moneyIncomeTotal").textContent=money(income);
-  $("#moneyBillsDue").textContent=money(billsDue);
+  $("#moneyTransfersTotal").textContent=money(transferred);
   $("#moneyAvailable").textContent=money(available);
   $("#moneyAvailable").classList.toggle("negative-money",available<0);
-  $("#moneyPressure").textContent=pressure?`${pressure[0]} · ${money(pressure[1])}`:"Add spending";
-  $("#dashboardBillsDue").textContent=money(billsDue);
+  $("#moneyPressure").textContent=pressure?`${pressure[0]} · ${money(pressure[1])}`:"Add money activity";
+  $("#dashboardSentToPaul").textContent=money(transferred);
   $("#dashboardMoneyLeft").textContent=money(available);
-  $("#moneyStatus").textContent=billsDue?money(billsDue)+" still due":monthBills.length?"Bills covered":"Add bills to begin";
-  $("#moneyPreview").innerHTML=monthBills.filter(x=>!x.paid).sort((a,b)=>a.dueDate.localeCompare(b.dueDate)).slice(0,2)
-    .map(x=>`<div class="list-item"><span>${escapeHtml(x.name)}<small style="display:block">Due ${x.dueDate}</small></span><b>${money(x.amount)}</b></div>`).join("")
-    || `<div class="empty-state">${monthBills.length?"This month's bills are covered.":"Add bills to see what is due."}</div>`;
+  $("#dashboardMoneyLeft").classList.toggle("negative-money",available<0);
+  $("#moneyStatus").textContent=transferred?money(transferred)+" sent to Paul":income?"Paycheck recorded":"Add paycheck to begin";
+  $("#moneyPreview").innerHTML=monthTransfers.slice(0,2).map(x=>`<div class="list-item"><span>${escapeHtml(x.purpose)}<small style="display:block">${x.date}</small></span><b>${money(x.amount)}</b></div>`).join("")
+    || `<div class="empty-state">Record money sent to Paul here.</div>`;
+
+  const transferSelect=$("#transferPaycheckSelect");
+  if(transferSelect){
+    const current=transferSelect.value;
+    transferSelect.innerHTML=`<option value="">Not linked to a paycheck</option>`+paychecks.map(x=>`<option value="${x.id}">${x.date} · ${escapeHtml(x.source)} · ${money(x.net)}</option>`).join("");
+    transferSelect.value=current;
+  }
+  const paycheckLabel=id=>{ const p=paychecks.find(x=>x.id===id); return p?`${p.date} · ${p.source}`:"Not linked"; };
 
   $("#paycheckTableBody").innerHTML=paychecks.length?paychecks.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(x.source)}</td><td>${money(x.gross)}</td><td>${money(x.deductions+x.truck)}</td><td><b>${money(x.net)}</b></td><td><button class="icon-btn" onclick="deleteItem('paychecks','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">Add your first paycheck to begin planning.</td></tr>`;
-  $("#billTableBody").innerHTML=bills.length?bills.map(x=>`<tr><td>${x.dueDate}</td><td>${escapeHtml(x.name)}<small style="display:block">${escapeHtml(x.category)}</small></td><td>${money(x.amount)}</td><td>${escapeHtml(x.frequency)}</td><td>${x.autoPay?"Yes":"No"}</td><td><button class="small-btn" onclick="toggleBill('${x.id}')">${x.paid?"✅ Paid":"Mark paid"}</button></td><td><button class="icon-btn" onclick="deleteItem('bills','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="7" class="empty-state">No bills entered yet.</td></tr>`;
-  $("#spendingTableBody").innerHTML=spending.length?spending.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(x.description)}</td><td>${escapeHtml(x.category)}</td><td>${escapeHtml(x.flexibility)}</td><td>${money(x.amount)}</td><td><button class="icon-btn" onclick="deleteItem('spending','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">Add spending to find the pressure points.</td></tr>`;
+  $("#transferTableBody").innerHTML=transfers.length?transfers.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(paycheckLabel(x.paycheckId))}</td><td>${escapeHtml(x.purpose)}</td><td>${escapeHtml(x.notes||"")}</td><td><b>${money(x.amount)}</b></td><td><button class="icon-btn" onclick="deleteItem('moneyTransfers','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">No transfers to Paul recorded yet.</td></tr>`;
+  $("#billTableBody").innerHTML=bills.length?bills.map(x=>`<tr><td>${x.dueDate}</td><td>${escapeHtml(x.name)}<small style="display:block">${escapeHtml(x.category)}</small></td><td>${money(x.amount)}</td><td>${escapeHtml(x.frequency)}</td><td>${x.autoPay?"Yes":"No"}</td><td><button class="small-btn" onclick="toggleBill('${x.id}')">${x.paid?"✅ Paid":"Mark paid"}</button></td><td><button class="icon-btn" onclick="deleteItem('bills','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="7" class="empty-state">Optional: add major shared bills if you want to see them.</td></tr>`;
+  $("#spendingTableBody").innerHTML=spending.length?spending.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(x.description)}</td><td>${escapeHtml(x.category)}</td><td>${escapeHtml(x.flexibility)}</td><td>${money(x.amount)}</td><td><button class="icon-btn" onclick="deleteItem('spending','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">Record only money Amanda paid directly.</td></tr>`;
 
   $("#pressureHeading").textContent=pressure?`Biggest pressure: ${pressure[0]}`:"Add your money details";
-  $("#pressureCopy").textContent=pressure?`${money(pressure[1])} has gone to ${pressure[0]} this month. Flexible spending totals ${money(flexible)}.`:"Once paychecks, bills, and spending are entered, AmandaOS will show where the pressure is coming from.";
+  $("#pressureCopy").textContent=pressure?`${money(pressure[1])} went toward ${pressure[0]} this month. Flexible direct spending totals ${money(flexible)}.`:"Add paychecks and transfers to see where your income is going.";
   $("#budgetFlow").innerHTML=[
-    ["Take-home income",income],["Bills",billsTotal],["Required spending",required],
-    ["Adjustable spending",adjustable],["Flexible spending",flexible],["Remaining",available]
+    ["Take-home income",income],["Sent to Paul",transferred],["Bills Amanda paid",directBills],
+    ["Other direct spending",directSpending],["Remaining with Amanda",available],["Optional bills still due",billsDue]
   ].map(([label,value])=>`<div><span>${label}</span><b class="${value<0?"negative-money":""}">${money(value)}</b></div>`).join("");
-  $("#categoryBreakdown").innerHTML=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1]).map(([label,value])=>`<div><span>${escapeHtml(label)}</span><b>${money(value)}</b></div>`).join("")||`<p class="muted">No spending entered yet.</p>`;
+  $("#categoryBreakdown").innerHTML=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1]).map(([label,value])=>`<div><span>${escapeHtml(label)}</span><b>${money(value)}</b></div>`).join("")||`<p class="muted">No money activity entered yet.</p>`;
 }
 
 function renderBrain(){
