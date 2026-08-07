@@ -134,6 +134,10 @@ handleForm("spendingForm","spending",fd=>({
   category:fd.get("category"), flexibility:fd.get("flexibility"), notes:fd.get("notes")
 }));
 
+handleForm("routineForm","routineTasks",fd=>({
+  id:uid(), text:fd.get("text"), schedule:fd.get("schedule"), created:new Date().toISOString()
+}));
+
 handleForm("brainForm","brainItems",fd=>({id:uid(), text:fd.get("text"), bucket:fd.get("bucket"), created:new Date().toISOString()}));
 handleForm("taskForm","tasks",fd=>({id:uid(), text:fd.get("text"), dueDate:fd.get("dueDate"), priority:fd.get("priority"), done:false}));
 handleForm("eventForm","events",fd=>({id:uid(), title:fd.get("title"), date:fd.get("date"), time:fd.get("time"), location:fd.get("location")}));
@@ -150,7 +154,17 @@ function toggleTask(id){ const t=store.get("tasks"); const x=t.find(x=>x.id===id
 function markFiled(key,id){ const a=store.get(key); const x=a.find(x=>x.id===id); if(x)x.filed=true; store.set(key,a); renderAll(); }
 
 function toggleBill(id){ const bills=store.get("bills"); const bill=bills.find(x=>x.id===id); if(bill) bill.paid=!bill.paid; store.set("bills",bills); renderAll(); }
-window.deleteItem=deleteItem; window.toggleTask=toggleTask; window.markFiled=markFiled; window.toggleBill=toggleBill;
+function toggleRoutineOccurrence(key){
+  const completed=store.getObj("routineCompletions",{});
+  completed[key]=!completed[key];
+  store.setObj("routineCompletions",completed);
+  renderMomentum();
+}
+function deleteRoutine(id){
+  store.set("routineTasks",store.get("routineTasks").filter(x=>x.id!==id));
+  renderAll();
+}
+window.deleteItem=deleteItem; window.toggleTask=toggleTask; window.markFiled=markFiled; window.toggleBill=toggleBill; window.toggleRoutineOccurrence=toggleRoutineOccurrence; window.deleteRoutine=deleteRoutine;
 
 function renderCallahan(){
   const all=store.get("callahanPurchases"), month=all.filter(x=>monthKey(x.date)===currentMonth());
@@ -217,6 +231,70 @@ function renderMoney(){
     ["Other direct spending",directSpending],["Remaining with Amanda",available],["Optional bills still due",billsDue]
   ].map(([label,value])=>`<div><span>${label}</span><b class="${value<0?"negative-money":""}">${money(value)}</b></div>`).join("");
   $("#categoryBreakdown").innerHTML=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1]).map(([label,value])=>`<div><span>${escapeHtml(label)}</span><b>${money(value)}</b></div>`).join("")||`<p class="muted">No money activity entered yet.</p>`;
+}
+
+function startOfWeek(date=new Date()){
+  const d=new Date(date.getFullYear(),date.getMonth(),date.getDate());
+  const day=d.getDay();
+  const offset=day===0?-6:1-day;
+  d.setDate(d.getDate()+offset);
+  return d;
+}
+function dateKeyFromDate(d){ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-"); }
+function renderMomentum(){
+  const routines=store.get("routineTasks");
+  const completed=store.getObj("routineCompletions",{});
+  const monday=startOfWeek();
+  const weekdays=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const dates=weekdays.map((label,index)=>{
+    const date=new Date(monday); date.setDate(monday.getDate()+index);
+    return {label,date,key:dateKeyFromDate(date)};
+  });
+  const groups=dates.map(day=>({label:day.label,date:day.date,items:[]}));
+  groups.push({label:"Weekly",date:null,items:[]});
+  const occurrences=[];
+
+  routines.forEach(task=>{
+    if(task.schedule==="Daily"){
+      dates.forEach((day,index)=>{
+        const key=`${day.key}:${task.id}`;
+        const item={task,key,done:!!completed[key],day:day.label};
+        groups[index].items.push(item); occurrences.push(item);
+      });
+    }else if(task.schedule==="Weekly"){
+      const weekKey=dateKeyFromDate(monday);
+      const key=`${weekKey}:weekly:${task.id}`;
+      const item={task,key,done:!!completed[key],day:"Weekly"};
+      groups[7].items.push(item); occurrences.push(item);
+    }else{
+      const index=weekdays.indexOf(task.schedule);
+      if(index>=0){
+        const day=dates[index], key=`${day.key}:${task.id}`;
+        const item={task,key,done:!!completed[key],day:day.label};
+        groups[index].items.push(item); occurrences.push(item);
+      }
+    }
+  });
+
+  const total=occurrences.length;
+  const done=occurrences.filter(x=>x.done).length;
+  const percent=total?Math.round(done/total*100):0;
+  const chart=$("#momentumChart");
+  if(total){
+    const step=360/total;
+    chart.style.background=`conic-gradient(${occurrences.map((item,index)=>`${item.done?"#35a968":"#d84f5f"} ${(index*step).toFixed(2)}deg ${((index+1)*step).toFixed(2)}deg`).join(",")})`;
+  }else{
+    chart.style.background="#d84f5f";
+  }
+  $("#momentumPercent").textContent=percent+"%";
+  $("#momentumComplete").textContent=done;
+  $("#momentumTotal").textContent=total;
+  chart.setAttribute("aria-label",`${done} of ${total} weekly tasks completed; ${percent} percent green`);
+
+  $("#routineWeekList").innerHTML=routines.length?groups.filter(group=>group.items.length).map(group=>{
+    const dateText=group.date?`<small>${group.date.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</small>`:"<small>Complete by Sunday</small>";
+    return `<section class="routine-day"><div class="routine-day-heading"><h4>${group.label}</h4>${dateText}</div>${group.items.map(item=>`<div class="routine-row ${item.done?"done":""}"><label><input type="checkbox" ${item.done?"checked":""} onchange="toggleRoutineOccurrence('${item.key}')"><span>${escapeHtml(item.task.text)}</span></label><button class="routine-delete" aria-label="Remove ${escapeHtml(item.task.text)}" onclick="deleteRoutine('${item.task.id}')">×</button></div>`).join("")}</section>`;
+  }).join(""):`<div class="empty-state routine-empty"><b>Your wheel is ready.</b><span>Add the daily and weekly tasks you want to turn green.</span></div>`;
 }
 
 function renderBrain(){
@@ -361,6 +439,7 @@ function renderAll(){
   setTodayDefaults();
   renderCallahan();
   renderMoney();
+  renderMomentum();
   renderBrain();
   renderTasks();
   renderEvents();
