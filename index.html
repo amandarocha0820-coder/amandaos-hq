@@ -52,7 +52,6 @@
           <div class="status-item"><span class="status green"></span><div><b>Calendar</b><small>Ready</small></div></div>
           <div class="status-item"><span class="status yellow"></span><div><b>Bills</b><small id="moneyStatus">Add bills to begin</small></div></div>
           <div class="status-item"><span class="status green"></span><div><b>Family</b><small>Tracking active</small></div></div>
-          <div class="status-item"><span class="status red"></span><div><b>Taxes</b><small>Setup needed</small></div></div>
         </div>
 
      <section class="today-panel card">
@@ -203,16 +202,6 @@
             <div class="goal-sizes"><span>Goal: size 16</span><span>Stretch: size 14</span></div>
           </article>
 
-          <article class="card">
-            <div class="card-header">
-              <div><span class="card-label">TAX CENTER</span><h3>Monthly filing</h3></div>
-              <button class="icon-btn" data-open="taxModal">✎</button>
-            </div>
-            <div id="taxStatusCard" class="tax-status">
-              <span class="status red"></span>
-              <div><b>Not configured</b><small>Add your due date and checklist.</small></div>
-            </div>
-          </article>
         </div>
 
         <section class="momentum-card card">
@@ -527,22 +516,11 @@
     <form method="dialog" id="alertForm">
       <div class="modal-header"><div><span class="card-label">ALERT</span><h3>Add Alert</h3></div><button class="close-btn" value="cancel">×</button></div>
       <label>Alert message<input name="text" required /></label>
-      <label>Type<select name="type"><option>General</option><option>Vendor Payment</option><option>Application</option><option>Medication Pickup</option><option>Tax</option></select></label>
+      <label>Type<select name="type"><option>General</option><option>Vendor Payment</option><option>Application</option><option>Medication Pickup</option></select></label>
       <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Alert</button></div>
     </form>
   </dialog>
 
-  <dialog id="taxModal" class="modal">
-    <form method="dialog" id="taxForm">
-      <div class="modal-header"><div><span class="card-label">TAX CENTER</span><h3>Monthly Tax Reminder</h3></div><button class="close-btn" value="cancel">×</button></div>
-      <label>Label<input name="label" value="Iowa Sales Tax" /></label>
-      <div class="form-grid">
-        <label>Due day each month<input name="dueDay" type="number" min="1" max="31" value="31" /></label>
-        <label>Status<select name="status"><option>Not Started</option><option>In Progress</option><option>Filed</option></select></label>
-      </div>
-      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Tax Setup</button></div>
-    </form>
-  </dialog>
 
   <dialog id="quickCaptureModal" class="modal action-modal">
     <div class="modal-header"><div><span class="card-label">QUICK CAPTURE</span><h3>What happened?</h3></div><button class="close-btn" data-close="quickCaptureModal">×</button></div>
