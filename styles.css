@@ -1376,3 +1376,43 @@ grid-template-columns:1fr;
     grid-template-columns:1fr 1fr;
   }
 }
+
+
+/* WEIGH-IN & WEDDING DRESS GOAL */
+.goal-sizes{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:13px;
+}
+.goal-sizes span{
+  padding:6px 9px;
+  border-radius:999px;
+  background:#eee6fa;
+  color:var(--purple-dark);
+  font-size:12px;
+  font-weight:800;
+}
+.weighin-goal-banner{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin-bottom:14px;
+  background:linear-gradient(135deg,#fff,#f2e9fb);
+}
+.weighin-goal-banner div{
+  padding:10px;
+}
+.weighin-goal-banner strong{
+  display:block;
+  margin-top:6px;
+  font-size:18px;
+}
+.positive-progress{
+  color:#35a968;
+}
+@media(max-width:760px){
+  .weighin-goal-banner{
+    grid-template-columns:1fr;
+  }
+}
