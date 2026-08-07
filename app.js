@@ -293,17 +293,19 @@ function renderMomentum(){
   const mondayKey=dateKeyFromDate(monday);
   const rewards=store.getObj("weeklyRewards",{});
   const reward=rewards[mondayKey]||"";
-  const left=Math.max(total-done,0);
+  const winningCount=total?Math.ceil(total*.8):0;
+  const neededToWin=Math.max(winningCount-done,0);
+  const weekWon=total>0&&percent>=80;
   $("#weeklyRewardButton").textContent=reward?"Change Weekly Reward":"Set Weekly Reward";
   $("#weeklyRewardInput").value=reward;
   $("#weeklyRewardProgress").textContent=!reward
-    ? "Set something worth working toward this week."
+    ? "Winning number: 80% green. Set something worth working toward this week."
     : !total
       ? `This week's reward: ${reward}. Add routines to start the wheel.`
-      : left===0
-        ? `You earned it: ${reward}`
-        : `Working toward: ${reward} · ${left} red piece${left===1?"":"s"} left.`;
-  $("#weeklyRewardProgress").classList.toggle("reached",!!reward&&total>0&&left===0);
+      : weekWon
+        ? `Week won at ${percent}% — you earned it: ${reward}`
+        : `Working toward: ${reward} · Turn ${neededToWin} more piece${neededToWin===1?"":"s"} green to reach 80%.`;
+  $("#weeklyRewardProgress").classList.toggle("reached",!!reward&&weekWon);
   const chart=$("#momentumChart");
   if(total){
     const step=360/total;
