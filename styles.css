@@ -1506,3 +1506,13 @@ grid-template-columns:1fr;
     text-align:left;
   }
 }
+
+.goal-last-weight{
+  display:block;
+  margin-top:8px;
+  color:var(--muted);
+  font-size:12px;
+}
+.goal-last-weight b{
+  color:var(--ink);
+}
