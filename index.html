@@ -181,10 +181,10 @@
           <article class="card money-card">
             <div class="card-header">
               <div><span class="card-label">MONEY</span><h3>This month</h3></div>
-              <button class="icon-btn" data-open="billModal">＋</button>
+              <button class="icon-btn" data-open="transferModal">＋</button>
             </div>
             <div class="mini-grid">
-              <div><b id="dashboardBillsDue">$0.00</b><small>Bills still due</small></div>
+              <div><b id="dashboardSentToPaul">$0.00</b><small>Sent to Paul</small></div>
               <div><b id="dashboardMoneyLeft">$0.00</b><small>Income unassigned</small></div>
             </div>
             <div id="moneyPreview" class="list compact"></div>
@@ -208,7 +208,7 @@
           </div>
           <div class="action-grid">
             <button data-open="callahanModal">❤️ Bought for Callahan</button>
-            <button data-open="billModal">💵 Add Bill</button>
+            <button data-open="transferModal">↗ Send to Paul</button>
             <button data-open="brainModal">🧠 Brain Dump</button>
             <button data-open="taskModal">✅ Add Task</button>
             <button data-open="eventModal">📅 Add Event</button>
@@ -243,24 +243,30 @@
           <div><p class="eyebrow">HOUSEHOLD MONEY</p><h2>Paychecks & Bills</h2><p class="muted">See what came in, what must go out, and what is putting pressure on the budget.</p></div>
           <div class="heading-actions">
             <button class="ghost-btn" data-open="paycheckModal">＋ Paycheck</button>
-            <button class="primary-btn" data-open="billModal">＋ Bill</button>
+            <button class="primary-btn" data-open="transferModal">↗ Send to Paul</button>
           </div>
         </div>
         <div class="summary-cards money-summary">
-          <div class="card metric-card"><span>Income this month</span><strong id="moneyIncomeTotal">$0.00</strong></div>
-          <div class="card metric-card"><span>Bills still due</span><strong id="moneyBillsDue">$0.00</strong></div>
-          <div class="card metric-card"><span>Unassigned money</span><strong id="moneyAvailable">$0.00</strong></div>
-          <div class="card metric-card pressure-card"><span>Biggest pressure</span><strong id="moneyPressure">Add spending</strong></div>
+          <div class="card metric-card"><span>Take-home income</span><strong id="moneyIncomeTotal">$0.00</strong></div>
+          <div class="card metric-card"><span>Sent to Paul</span><strong id="moneyTransfersTotal">$0.00</strong></div>
+          <div class="card metric-card"><span>Remaining with Amanda</span><strong id="moneyAvailable">$0.00</strong></div>
+          <div class="card metric-card pressure-card"><span>Biggest pressure</span><strong id="moneyPressure">Add money activity</strong></div>
         </div>
         <div class="money-actions">
           <button class="money-tab active" data-money-panel="paychecksPanel">Paychecks</button>
-          <button class="money-tab" data-money-panel="billsPanel">Bills</button>
-          <button class="money-tab" data-money-panel="spendingPanel">Spending</button>
+          <button class="money-tab" data-money-panel="transfersPanel">Sent to Paul</button>
+          <button class="money-tab" data-money-panel="spendingPanel">Paid Directly</button>
+          <button class="money-tab" data-money-panel="billsPanel">Optional Bills</button>
           <button class="money-tab" data-money-panel="reviewPanel">Budget Review</button>
         </div>
         <div id="paychecksPanel" class="money-panel active">
           <div class="card table-card"><div class="table-title"><h3>Paychecks</h3><button class="primary-btn" data-open="paycheckModal">＋ Add Paycheck</button></div>
             <table><thead><tr><th>Pay date</th><th>Source</th><th>Gross</th><th>Deductions</th><th>Take-home</th><th></th></tr></thead><tbody id="paycheckTableBody"></tbody></table>
+          </div>
+        </div>
+        <div id="transfersPanel" class="money-panel">
+          <div class="card table-card"><div class="table-title"><h3>Money Sent to Paul</h3><button class="primary-btn" data-open="transferModal">↗ Add Transfer</button></div>
+            <table><thead><tr><th>Date</th><th>From paycheck</th><th>Purpose</th><th>Notes</th><th>Amount</th><th></th></tr></thead><tbody id="transferTableBody"></tbody></table>
           </div>
         </div>
         <div id="billsPanel" class="money-panel">
@@ -269,7 +275,7 @@
           </div>
         </div>
         <div id="spendingPanel" class="money-panel">
-          <div class="card table-card"><div class="table-title"><h3>Spending</h3><button class="primary-btn" data-open="spendingModal">＋ Add Spending</button></div>
+          <div class="card table-card"><div class="table-title"><h3>Money Amanda Paid Directly</h3><button class="primary-btn" data-open="spendingModal">＋ Add Payment</button></div>
             <table><thead><tr><th>Date</th><th>What</th><th>Category</th><th>Need or flexible?</th><th>Amount</th><th></th></tr></thead><tbody id="spendingTableBody"></tbody></table>
           </div>
         </div>
@@ -350,6 +356,20 @@
       </div>
       <label>Notes<textarea name="notes" rows="2"></textarea></label>
       <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Paycheck</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="transferModal" class="modal">
+    <form method="dialog" id="transferForm">
+      <div class="modal-header"><div><span class="card-label">HOUSEHOLD MONEY</span><h3>Money Sent to Paul</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>Date sent<input name="date" type="date" required /></label>
+        <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
+        <label>From paycheck<select name="paycheckId" id="transferPaycheckSelect"><option value="">Not linked to a paycheck</option></select></label>
+        <label>Purpose<select name="purpose"><option>General household</option><option>Household bills</option><option>Groceries</option><option>Storage</option><option>Debt</option><option>Vehicle</option><option>Rent or housing</option><option>Medical</option><option>Other</option></select></label>
+      </div>
+      <label>Optional note<input name="notes" placeholder="What was this meant to cover?" /></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Transfer</button></div>
     </form>
   </dialog>
 
@@ -445,7 +465,7 @@
     <div class="modal-header"><div><span class="card-label">QUICK CAPTURE</span><h3>What happened?</h3></div><button class="close-btn" data-close="quickCaptureModal">×</button></div>
     <div class="action-grid modal-grid">
       <button data-jump="callahanModal">❤️ Bought for Callahan</button>
-      <button data-jump="billModal">💵 Add Bill</button>
+      <button data-jump="transferModal">↗ Send to Paul</button>
       <button data-jump="brainModal">🧠 Brain Dump</button>
       <button data-jump="taskModal">✅ Add Task</button>
       <button data-jump="eventModal">📅 Add Event</button>
