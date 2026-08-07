@@ -82,15 +82,15 @@ $$('.modal button[value="cancel"]').forEach(button => {
 });
 $$("[data-jump]").forEach(b=>b.addEventListener("click",()=>{ $("#quickCaptureModal").close(); openModal(b.dataset.jump); }));
 
-$(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
-  $(".nav-btn").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
-  $(".view").forEach(v=>v.classList.remove("active-view"));
+$$(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  $$(".nav-btn").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
+  $$(".view").forEach(v=>v.classList.remove("active-view"));
   document.getElementById(btn.dataset.view).classList.add("active-view");
 }));
 
-$(".money-tab").forEach(btn=>btn.addEventListener("click",()=>{
-  $(".money-tab").forEach(x=>x.classList.remove("active"));
-  $(".money-panel").forEach(x=>x.classList.remove("active"));
+$$(".money-tab").forEach(btn=>btn.addEventListener("click",()=>{
+  $$(".money-tab").forEach(x=>x.classList.remove("active"));
+  $$(".money-panel").forEach(x=>x.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById(btn.dataset.moneyPanel).classList.add("active");
 }));
