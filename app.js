@@ -149,11 +149,13 @@ $("#taxForm").addEventListener("submit",e=>{
   e.currentTarget.closest("dialog").close(); renderAll();
 });
 
-$("#momentumGoalForm").addEventListener("submit",e=>{
+$("#weeklyRewardForm").addEventListener("submit",e=>{
   e.preventDefault();
   const fd=new FormData(e.currentTarget);
-  const goal=Math.max(1,Math.min(100,Number(fd.get("goal"))||80));
-  store.setObj("momentumGoal",{percent:goal});
+  const mondayKey=dateKeyFromDate(startOfWeek());
+  const rewards=store.getObj("weeklyRewards",{});
+  rewards[mondayKey]=String(fd.get("reward")||"").trim();
+  store.setObj("weeklyRewards",rewards);
   e.currentTarget.closest("dialog").close();
   renderMomentum();
 });
@@ -288,17 +290,20 @@ function renderMomentum(){
   const total=occurrences.length;
   const done=occurrences.filter(x=>x.done).length;
   const percent=total?Math.round(done/total*100):0;
-  const goal=store.getObj("momentumGoal",{percent:80}).percent||80;
-  const goalCount=total?Math.ceil(total*goal/100):0;
-  const needed=Math.max(goalCount-done,0);
-  $("#momentumGoalButton").textContent=goal+"%";
-  $("#momentumGoalInput").value=goal;
-  $("#momentumGoalProgress").textContent=!total
-    ? `Your weekly goal is ${goal}%. Add routines to start the wheel.`
-    : needed===0
-      ? `Goal reached — ${percent}% green this week!`
-      : `Weekly goal: ${goal}% · Complete ${needed} more task${needed===1?"":"s"} to reach it.`;
-  $("#momentumGoalProgress").classList.toggle("reached",total>0&&needed===0);
+  const mondayKey=dateKeyFromDate(monday);
+  const rewards=store.getObj("weeklyRewards",{});
+  const reward=rewards[mondayKey]||"";
+  const left=Math.max(total-done,0);
+  $("#weeklyRewardButton").textContent=reward?"Change Weekly Reward":"Set Weekly Reward";
+  $("#weeklyRewardInput").value=reward;
+  $("#weeklyRewardProgress").textContent=!reward
+    ? "Set something worth working toward this week."
+    : !total
+      ? `This week's reward: ${reward}. Add routines to start the wheel.`
+      : left===0
+        ? `You earned it: ${reward}`
+        : `Working toward: ${reward} · ${left} red piece${left===1?"":"s"} left.`;
+  $("#weeklyRewardProgress").classList.toggle("reached",!!reward&&total>0&&left===0);
   const chart=$("#momentumChart");
   if(total){
     const step=360/total;
