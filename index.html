@@ -21,6 +21,7 @@
       <nav>
         <button class="nav-btn active" data-view="dashboard">🏠 Dashboard</button>
         <button class="nav-btn" data-view="callahan">❤️ Callahan</button>
+        <button class="nav-btn" data-view="weighin">⚖️ Weigh-In</button>
         <button class="nav-btn" data-view="money">💵 Money</button>
         <button class="nav-btn" data-view="brain">🧠 Brain</button>
         <button class="nav-btn" data-view="tasks">✅ Tasks</button>
@@ -190,6 +191,18 @@
             <div id="moneyPreview" class="list compact"></div>
           </article>
 
+          <article class="card accent-card">
+            <div class="card-header">
+              <div><span class="card-label">WEDDING DRESS GOAL</span><h3>August 2027</h3></div>
+              <button class="icon-btn" data-open="weighInModal">＋</button>
+            </div>
+            <div class="mini-grid">
+              <div><b id="dashboardLatestWeight">—</b><small>Latest weight</small></div>
+              <div><b id="dashboardLatestSize">—</b><small>Latest dress size</small></div>
+            </div>
+            <div class="goal-sizes"><span>Goal: size 16</span><span>Stretch: size 14</span></div>
+          </article>
+
           <article class="card">
             <div class="card-header">
               <div><span class="card-label">TAX CENTER</span><h3>Monthly filing</h3></div>
@@ -300,6 +313,26 @@
             <article class="card"><span class="card-label">MONTHLY FLOW</span><div id="budgetFlow" class="budget-flow"></div></article>
             <article class="card"><span class="card-label">SPENDING BY CATEGORY</span><div id="categoryBreakdown" class="category-breakdown"></div></article>
           </div>
+        </div>
+      </section>
+
+      <section id="weighin" class="view">
+        <div class="section-heading">
+          <div><p class="eyebrow">WEDDING DRESS JOURNEY</p><h2>Weigh-In & Size Progress</h2><p class="muted">Track the scale, dress size, measurements, and how you feel—without letting one number tell the whole story.</p></div>
+          <button class="primary-btn" data-open="weighInModal">＋ Add Weigh-In</button>
+        </div>
+        <div class="weighin-goal-banner card">
+          <div><span class="card-label">TARGET DATE</span><strong>August 2027</strong></div>
+          <div><span class="card-label">MAIN GOAL</span><strong>Wedding dress size 16</strong></div>
+          <div><span class="card-label">FANTASTIC GOAL</span><strong>Wedding dress size 14</strong></div>
+        </div>
+        <div class="summary-cards">
+          <div class="card metric-card"><span>Latest weight</span><strong id="latestWeight">—</strong></div>
+          <div class="card metric-card"><span>Latest dress size</span><strong id="latestDressSize">—</strong></div>
+          <div class="card metric-card"><span>Change since first entry</span><strong id="weightChange">—</strong></div>
+        </div>
+        <div class="card table-card"><div class="table-title"><h3>Progress History</h3><button class="primary-btn" data-open="weighInModal">＋ Add Weigh-In</button></div>
+          <table><thead><tr><th>Date</th><th>Weight</th><th>Dress size</th><th>Bust</th><th>Waist</th><th>Hips</th><th>Notes</th><th></th></tr></thead><tbody id="weighInTableBody"></tbody></table>
         </div>
       </section>
 
@@ -416,6 +449,22 @@
       </div>
       <label>Notes<textarea name="notes" rows="2"></textarea></label>
       <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Spending</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="weighInModal" class="modal">
+    <form method="dialog" id="weighInForm">
+      <div class="modal-header"><div><span class="card-label">WEDDING DRESS JOURNEY</span><h3>Add Weigh-In</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>Date<input name="date" type="date" required /></label>
+        <label>Weight (lb)<input name="weight" type="number" step="0.1" min="0" required /></label>
+        <label>Current wedding dress size<input name="dressSize" type="number" step="1" min="0" /></label>
+        <label>Bust (inches)<input name="bust" type="number" step="0.1" min="0" /></label>
+        <label>Waist (inches)<input name="waist" type="number" step="0.1" min="0" /></label>
+        <label>Hips (inches)<input name="hips" type="number" step="0.1" min="0" /></label>
+      </div>
+      <label>Notes<textarea name="notes" rows="3" placeholder="Energy, fit, wins, challenges, or anything you want to remember"></textarea></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Weigh-In</button></div>
     </form>
   </dialog>
 
