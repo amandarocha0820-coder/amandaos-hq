@@ -86,6 +86,7 @@ $$(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
   $$(".nav-btn").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
   $$(".view").forEach(v=>v.classList.remove("active-view"));
   document.getElementById(btn.dataset.view).classList.add("active-view");
+  if(btn.dataset.view==="weighin") requestAnimationFrame(()=>drawWeightTrend([...store.get("weighIns")].sort((a,b)=>a.date.localeCompare(b.date))));
 }));
 
 $$(".money-tab").forEach(btn=>btn.addEventListener("click",()=>{
@@ -270,6 +271,46 @@ function renderWeighIns(){
     <td>${measurement(x.bust)}</td><td>${measurement(x.waist)}</td><td>${measurement(x.hips)}</td>
     <td>${escapeHtml(x.notes||"")}</td><td><button class="icon-btn" onclick="deleteItem('weighIns','${x.id}')">×</button></td>
   </tr>`).join(""):`<tr><td colspan="8" class="empty-state">Add your first weigh-in when you are ready.</td></tr>`;
+
+  drawWeightTrend([...entries].reverse());
+}
+
+function drawWeightTrend(entries){
+  const canvas=$("#weightTrendCanvas"), empty=$("#weightTrendEmpty"), summary=$("#weightTrendSummary");
+  if(!canvas||!empty||!summary) return;
+  if(entries.length<2){
+    canvas.style.display="none"; empty.style.display="grid";
+    summary.textContent="Add at least two weigh-ins to see a trend.";
+    return;
+  }
+  const shell=canvas.parentElement;
+  const width=Math.max(shell.clientWidth,0);
+  if(width<100) return;
+  const height=280, ratio=window.devicePixelRatio||1;
+  canvas.style.display="block"; empty.style.display="none";
+  canvas.width=width*ratio; canvas.height=height*ratio;
+  canvas.style.width=width+"px"; canvas.style.height=height+"px";
+  const ctx=canvas.getContext("2d"); ctx.scale(ratio,ratio);
+  const pad={left:52,right:22,top:25,bottom:42};
+  const weights=entries.map(x=>Number(x.weight));
+  let min=Math.min(...weights), max=Math.max(...weights);
+  if(min===max){min-=2;max+=2}else{const room=Math.max((max-min)*.15,1);min-=room;max+=room;}
+  const x=index=>pad.left+(index/(entries.length-1))*(width-pad.left-pad.right);
+  const y=value=>pad.top+((max-value)/(max-min))*(height-pad.top-pad.bottom);
+  ctx.font="12px system-ui"; ctx.fillStyle="#746b85"; ctx.strokeStyle="#e1d8ec"; ctx.lineWidth=1;
+  for(let i=0;i<4;i++){
+    const value=max-(i/3)*(max-min), py=y(value);
+    ctx.beginPath();ctx.moveTo(pad.left,py);ctx.lineTo(width-pad.right,py);ctx.stroke();
+    ctx.fillText(value.toFixed(1),5,py+4);
+  }
+  ctx.strokeStyle="#7c59d8";ctx.lineWidth=3;ctx.lineJoin="round";ctx.lineCap="round";ctx.beginPath();
+  entries.forEach((entry,index)=>{const px=x(index),py=y(entry.weight);index?ctx.lineTo(px,py):ctx.moveTo(px,py);});ctx.stroke();
+  entries.forEach((entry,index)=>{const px=x(index),py=y(entry.weight);ctx.fillStyle="#7c59d8";ctx.beginPath();ctx.arc(px,py,4.5,0,Math.PI*2);ctx.fill();});
+  const labelIndexes=[0,Math.floor((entries.length-1)/2),entries.length-1].filter((v,i,a)=>a.indexOf(v)===i);
+  ctx.fillStyle="#746b85";ctx.textAlign="center";
+  labelIndexes.forEach(index=>ctx.fillText(new Date(entries[index].date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}),x(index),height-14));
+  const change=entries[entries.length-1].weight-entries[0].weight;
+  summary.textContent=`${entries.length} weigh-ins · ${change>0?"+":""}${change.toFixed(1)} lb from first to latest`;
 }
 
 function startOfWeek(date=new Date()){
@@ -350,6 +391,11 @@ function renderMomentum(){
     const dateText=group.date?`<small>${group.date.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</small>`:"<small>Complete by Sunday</small>";
     return `<section class="routine-day"><div class="routine-day-heading"><h4>${group.label}</h4>${dateText}</div>${group.items.map(item=>`<div class="routine-row ${item.done?"done":""}"><label><input type="checkbox" ${item.done?"checked":""} onchange="toggleRoutineOccurrence('${item.key}')"><span>${escapeHtml(item.task.text)}</span></label><button class="routine-delete" aria-label="Remove ${escapeHtml(item.task.text)}" onclick="deleteRoutine('${item.task.id}')">×</button></div>`).join("")}</section>`;
   }).join(""):`<div class="empty-state routine-empty"><b>Your wheel is ready.</b><span>Add the daily and weekly tasks you want to turn green.</span></div>`;
+  $("#dailyTaskTrend").innerHTML=groups.slice(0,7).map(group=>{
+    const dayTotal=group.items.length, dayDone=group.items.filter(x=>x.done).length;
+    const dayPercent=dayTotal?Math.round(dayDone/dayTotal*100):0;
+    return `<div class="daily-trend-row"><span>${group.label.slice(0,3)}</span><div class="daily-trend-bar" aria-label="${group.label}: ${dayPercent}% complete"><i style="width:${dayPercent}%"></i><b style="width:${100-dayPercent}%"></b></div><strong>${dayPercent}%</strong></div>`;
+  }).join("");
 }
 
 function renderBrain(){
