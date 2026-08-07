@@ -256,6 +256,7 @@ function renderWeighIns(){
   $("#dashboardLatestWeight").textContent=weightText;
   $("#dashboardLatestSize").textContent=sizeText;
   $("#latestWeight").textContent=weightText;
+  $("#goalLastWeight").textContent=weightText;
   $("#latestDressSize").textContent=sizeText;
   if(latest&&first&&entries.length>1){
     const change=latest.weight-first.weight;
