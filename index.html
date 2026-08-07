@@ -21,7 +21,7 @@
       <nav>
         <button class="nav-btn active" data-view="dashboard">🏠 Dashboard</button>
         <button class="nav-btn" data-view="callahan">❤️ Callahan</button>
-        <button class="nav-btn" data-view="business">🐼 Business</button>
+        <button class="nav-btn" data-view="money">💵 Money</button>
         <button class="nav-btn" data-view="brain">🧠 Brain</button>
         <button class="nav-btn" data-view="tasks">✅ Tasks</button>
         <button class="nav-btn" data-view="settings">⚙️ Settings</button>
@@ -49,7 +49,7 @@
       <section id="dashboard" class="view active-view">
         <div class="status-strip">
           <div class="status-item"><span class="status green"></span><div><b>Calendar</b><small>Ready</small></div></div>
-          <div class="status-item"><span class="status yellow"></span><div><b>Bookkeeping</b><small id="bookkeepingStatus">Needs review</small></div></div>
+          <div class="status-item"><span class="status yellow"></span><div><b>Bills</b><small id="moneyStatus">Add bills to begin</small></div></div>
           <div class="status-item"><span class="status green"></span><div><b>Family</b><small>Tracking active</small></div></div>
           <div class="status-item"><span class="status red"></span><div><b>Taxes</b><small>Setup needed</small></div></div>
         </div>
@@ -178,16 +178,16 @@
             </div>
           </article>
 
-          <article class="card">
+          <article class="card money-card">
             <div class="card-header">
-              <div><span class="card-label">BOOKKEEPING</span><h3>Business</h3></div>
-              <button class="icon-btn" data-open="businessPurchaseModal">＋</button>
+              <div><span class="card-label">MONEY</span><h3>This month</h3></div>
+              <button class="icon-btn" data-open="billModal">＋</button>
             </div>
             <div class="mini-grid">
-              <div><b id="businessPurchaseTotal">$0.00</b><small>This month</small></div>
-              <div><b id="businessNeedsReview">0</b><small>Needs review</small></div>
+              <div><b id="dashboardBillsDue">$0.00</b><small>Bills still due</small></div>
+              <div><b id="dashboardMoneyLeft">$0.00</b><small>Income unassigned</small></div>
             </div>
-            <div id="bookkeepingPreview" class="list compact"></div>
+            <div id="moneyPreview" class="list compact"></div>
           </article>
 
           <article class="card">
@@ -208,7 +208,7 @@
           </div>
           <div class="action-grid">
             <button data-open="callahanModal">❤️ Bought for Callahan</button>
-            <button data-open="businessPurchaseModal">💼 Business Purchase</button>
+            <button data-open="billModal">💵 Add Bill</button>
             <button data-open="brainModal">🧠 Brain Dump</button>
             <button data-open="taskModal">✅ Add Task</button>
             <button data-open="eventModal">📅 Add Event</button>
@@ -238,24 +238,47 @@
         </div>
       </section>
 
-      <section id="business" class="view">
+      <section id="money" class="view">
         <div class="section-heading">
-          <div><p class="eyebrow">PANDA ENTERPRISES</p><h2>Business Bookkeeping</h2></div>
+          <div><p class="eyebrow">HOUSEHOLD MONEY</p><h2>Paychecks & Bills</h2><p class="muted">See what came in, what must go out, and what is putting pressure on the budget.</p></div>
           <div class="heading-actions">
-            <button class="ghost-btn" id="exportBusinessCsv">Export CSV</button>
-            <button class="primary-btn" data-open="businessPurchaseModal">＋ Add Purchase</button>
+            <button class="ghost-btn" data-open="paycheckModal">＋ Paycheck</button>
+            <button class="primary-btn" data-open="billModal">＋ Bill</button>
           </div>
         </div>
-        <div class="summary-cards">
-          <div class="card metric-card"><span>This month</span><strong id="businessPageTotal">$0.00</strong></div>
-          <div class="card metric-card"><span>Needs review</span><strong id="businessPageReview">0</strong></div>
-          <div class="card metric-card"><span>Receipts not filed</span><strong id="businessPageUnfiled">0</strong></div>
+        <div class="summary-cards money-summary">
+          <div class="card metric-card"><span>Income this month</span><strong id="moneyIncomeTotal">$0.00</strong></div>
+          <div class="card metric-card"><span>Bills still due</span><strong id="moneyBillsDue">$0.00</strong></div>
+          <div class="card metric-card"><span>Unassigned money</span><strong id="moneyAvailable">$0.00</strong></div>
+          <div class="card metric-card pressure-card"><span>Biggest pressure</span><strong id="moneyPressure">Add spending</strong></div>
         </div>
-        <div class="card table-card">
-          <table>
-            <thead><tr><th>Date</th><th>Merchant</th><th>What</th><th>Business</th><th>Amount</th><th>Status</th><th></th></tr></thead>
-            <tbody id="businessTableBody"></tbody>
-          </table>
+        <div class="money-actions">
+          <button class="money-tab active" data-money-panel="paychecksPanel">Paychecks</button>
+          <button class="money-tab" data-money-panel="billsPanel">Bills</button>
+          <button class="money-tab" data-money-panel="spendingPanel">Spending</button>
+          <button class="money-tab" data-money-panel="reviewPanel">Budget Review</button>
+        </div>
+        <div id="paychecksPanel" class="money-panel active">
+          <div class="card table-card"><div class="table-title"><h3>Paychecks</h3><button class="primary-btn" data-open="paycheckModal">＋ Add Paycheck</button></div>
+            <table><thead><tr><th>Pay date</th><th>Source</th><th>Gross</th><th>Deductions</th><th>Take-home</th><th></th></tr></thead><tbody id="paycheckTableBody"></tbody></table>
+          </div>
+        </div>
+        <div id="billsPanel" class="money-panel">
+          <div class="card table-card"><div class="table-title"><h3>Bills</h3><button class="primary-btn" data-open="billModal">＋ Add Bill</button></div>
+            <table><thead><tr><th>Due</th><th>Bill</th><th>Amount</th><th>Frequency</th><th>Auto-pay</th><th>Status</th><th></th></tr></thead><tbody id="billTableBody"></tbody></table>
+          </div>
+        </div>
+        <div id="spendingPanel" class="money-panel">
+          <div class="card table-card"><div class="table-title"><h3>Spending</h3><button class="primary-btn" data-open="spendingModal">＋ Add Spending</button></div>
+            <table><thead><tr><th>Date</th><th>What</th><th>Category</th><th>Need or flexible?</th><th>Amount</th><th></th></tr></thead><tbody id="spendingTableBody"></tbody></table>
+          </div>
+        </div>
+        <div id="reviewPanel" class="money-panel">
+          <div class="budget-review-grid">
+            <article class="card"><span class="card-label">BUDGET PRESSURE</span><h3 id="pressureHeading">Add your money details</h3><p id="pressureCopy" class="muted">Once paychecks, bills, and spending are entered, AmandaOS will show where the pressure is coming from.</p></article>
+            <article class="card"><span class="card-label">MONTHLY FLOW</span><div id="budgetFlow" class="budget-flow"></div></article>
+            <article class="card"><span class="card-label">SPENDING BY CATEGORY</span><div id="categoryBreakdown" class="category-breakdown"></div></article>
+          </div>
         </div>
       </section>
 
@@ -314,27 +337,50 @@
     </form>
   </dialog>
 
-  <dialog id="businessPurchaseModal" class="modal">
-    <form method="dialog" id="businessPurchaseForm">
-      <div class="modal-header"><div><span class="card-label">QUICK CAPTURE</span><h3>Business Purchase</h3></div><button class="close-btn" value="cancel">×</button></div>
+  <dialog id="paycheckModal" class="modal">
+    <form method="dialog" id="paycheckForm">
+      <div class="modal-header"><div><span class="card-label">MONEY IN</span><h3>Add Paycheck</h3></div><button class="close-btn" value="cancel">×</button></div>
       <div class="form-grid">
-        <label>Merchant<input name="merchant" required /></label>
+        <label>Pay date<input name="date" type="date" required /></label>
+        <label>Income source<input name="source" value="Amanda — Allied Universal" required /></label>
+        <label>Gross pay<input name="gross" type="number" step="0.01" min="0" /></label>
+        <label>Taxes and other deductions<input name="deductions" type="number" step="0.01" min="0" /></label>
+        <label>Truck payment deduction<input name="truck" type="number" step="0.01" min="0" value="200" /></label>
+        <label>Actual take-home pay<input name="net" type="number" step="0.01" min="0" required /></label>
+      </div>
+      <label>Notes<textarea name="notes" rows="2"></textarea></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Paycheck</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="billModal" class="modal">
+    <form method="dialog" id="billForm">
+      <div class="modal-header"><div><span class="card-label">MONEY OUT</span><h3>Add Bill</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>Bill name<input name="name" required /></label>
         <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
+        <label>Due date<input name="dueDate" type="date" required /></label>
+        <label>Frequency<select name="frequency"><option>Monthly</option><option>Weekly</option><option>Every paycheck</option><option>One time</option></select></label>
+        <label>Category<select name="category"><option>Housing</option><option>Utilities</option><option>Vehicle</option><option>Insurance</option><option>Storage</option><option>Phone</option><option>Debt</option><option>Medical</option><option>Other</option></select></label>
+        <label><input name="autoPay" type="checkbox" /> Auto-pay</label>
+        <label><input name="paid" type="checkbox" /> Already paid</label>
+      </div>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Bill</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="spendingModal" class="modal">
+    <form method="dialog" id="spendingForm">
+      <div class="modal-header"><div><span class="card-label">SPENDING</span><h3>Add Purchase</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
         <label>What was it?<input name="description" required /></label>
-        <label>Business
-          <select name="business"><option>Panda Enterprises</option><option>Panda's Sweet Creations</option><option>Panda's Polar Treats</option><option>Event</option><option>Other</option></select>
-        </label>
+        <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
         <label>Date<input name="date" type="date" required /></label>
-        <label>Category
-          <select name="category"><option>Needs Review</option><option>Advertising</option><option>Event Supplies</option><option>Inventory</option><option>Fees</option><option>Fuel/Mileage</option><option>Office</option><option>Other</option></select>
-        </label>
+        <label>Category<select name="category"><option>Groceries</option><option>Gas</option><option>Restaurants</option><option>Subscriptions</option><option>Shopping</option><option>Entertainment</option><option>Medical</option><option>Family</option><option>Fees</option><option>Other</option></select></label>
+        <label>Type<select name="flexibility"><option>Required</option><option>Necessary but adjustable</option><option>Flexible</option></select></label>
       </div>
-      <div class="receipt-check">
-        <label><input type="checkbox" name="photoTaken" /> Receipt photo taken</label>
-        <label><input type="checkbox" name="filed" /> Did you put it in the receipt box?</label>
-        <label><input type="checkbox" name="reviewed" /> Bookkeeping complete</label>
-      </div>
-      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Purchase</button></div>
+      <label>Notes<textarea name="notes" rows="2"></textarea></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Spending</button></div>
     </form>
   </dialog>
 
@@ -399,7 +445,7 @@
     <div class="modal-header"><div><span class="card-label">QUICK CAPTURE</span><h3>What happened?</h3></div><button class="close-btn" data-close="quickCaptureModal">×</button></div>
     <div class="action-grid modal-grid">
       <button data-jump="callahanModal">❤️ Bought for Callahan</button>
-      <button data-jump="businessPurchaseModal">💼 Business Purchase</button>
+      <button data-jump="billModal">💵 Add Bill</button>
       <button data-jump="brainModal">🧠 Brain Dump</button>
       <button data-jump="taskModal">✅ Add Task</button>
       <button data-jump="eventModal">📅 Add Event</button>
