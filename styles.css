@@ -1682,3 +1682,25 @@ body{
   .celebration-particle{display:none !important}
   .celebration-toast{transition:none}
 }
+
+
+/* WIDEN TODAY'S THREE CARDS */
+.today-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.today-box h3{
+  white-space:nowrap;
+}
+@media(max-width:1000px){
+  .today-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .today-box h3{
+    white-space:normal;
+  }
+}
+@media(max-width:650px){
+  .today-grid{
+    grid-template-columns:1fr;
+  }
+}
