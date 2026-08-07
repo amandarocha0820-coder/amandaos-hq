@@ -217,6 +217,10 @@
             </div>
             <div id="routineWeekList" class="routine-week-list"></div>
           </div>
+          <div class="momentum-trend">
+            <div class="trend-heading"><div><span class="card-label">DAILY TREND</span><h4>This week by day</h4></div><span>Green completed · Red remaining</span></div>
+            <div id="dailyTaskTrend" class="daily-task-trend"></div>
+          </div>
         </section>
 
         <section class="quick-actions card">
@@ -319,6 +323,10 @@
           <div class="card metric-card"><span>Latest weight</span><strong id="latestWeight">—</strong></div>
           <div class="card metric-card"><span>Latest dress size</span><strong id="latestDressSize">—</strong></div>
           <div class="card metric-card"><span>Change since first entry</span><strong id="weightChange">—</strong></div>
+        </div>
+        <div class="card weight-trend-card">
+          <div class="trend-heading"><div><span class="card-label">WEIGHT TREND</span><h3>Progress over time</h3></div><span id="weightTrendSummary">Add at least two weigh-ins to see a trend.</span></div>
+          <div class="weight-chart-shell"><canvas id="weightTrendCanvas" aria-label="Weight trend chart"></canvas><div id="weightTrendEmpty" class="weight-trend-empty">Your trend line will appear here after two weigh-ins.</div></div>
         </div>
         <div class="card table-card"><div class="table-title"><h3>Progress History</h3><button class="primary-btn" data-open="weighInModal">＋ Add Weigh-In</button></div>
           <table><thead><tr><th>Date</th><th>Weight</th><th>Dress size</th><th>Bust</th><th>Waist</th><th>Hips</th><th>Notes</th><th></th></tr></thead><tbody id="weighInTableBody"></tbody></table>
