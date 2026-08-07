@@ -134,6 +134,15 @@ handleForm("spendingForm","spending",fd=>({
   category:fd.get("category"), flexibility:fd.get("flexibility"), notes:fd.get("notes")
 }));
 
+handleForm("weighInForm","weighIns",fd=>({
+  id:uid(), date:fd.get("date"), weight:Number(fd.get("weight")),
+  dressSize:fd.get("dressSize")?Number(fd.get("dressSize")):null,
+  bust:fd.get("bust")?Number(fd.get("bust")):null,
+  waist:fd.get("waist")?Number(fd.get("waist")):null,
+  hips:fd.get("hips")?Number(fd.get("hips")):null,
+  notes:fd.get("notes")
+}));
+
 handleForm("routineForm","routineTasks",fd=>({
   id:uid(), text:fd.get("text"), schedule:fd.get("schedule"), created:new Date().toISOString()
 }));
@@ -157,6 +166,7 @@ $("#weeklyRewardForm").addEventListener("submit",e=>{
   rewards[mondayKey]=String(fd.get("reward")||"").trim();
   store.setObj("weeklyRewards",rewards);
   e.currentTarget.closest("dialog").close();
+  renderWeighIns();
   renderMomentum();
 });
 
@@ -242,6 +252,31 @@ function renderMoney(){
     ["Other direct spending",directSpending],["Remaining with Amanda",available],["Optional bills still due",billsDue]
   ].map(([label,value])=>`<div><span>${label}</span><b class="${value<0?"negative-money":""}">${money(value)}</b></div>`).join("");
   $("#categoryBreakdown").innerHTML=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1]).map(([label,value])=>`<div><span>${escapeHtml(label)}</span><b>${money(value)}</b></div>`).join("")||`<p class="muted">No money activity entered yet.</p>`;
+}
+
+function renderWeighIns(){
+  const entries=store.get("weighIns").sort((a,b)=>b.date.localeCompare(a.date));
+  const latest=entries[0], first=entries[entries.length-1];
+  const weightText=latest?`${latest.weight.toFixed(1)} lb`:"—";
+  const sizeText=latest&&latest.dressSize?`Size ${latest.dressSize}`:"—";
+  $("#dashboardLatestWeight").textContent=weightText;
+  $("#dashboardLatestSize").textContent=sizeText;
+  $("#latestWeight").textContent=weightText;
+  $("#latestDressSize").textContent=sizeText;
+  if(latest&&first&&entries.length>1){
+    const change=latest.weight-first.weight;
+    $("#weightChange").textContent=`${change>0?"+":""}${change.toFixed(1)} lb`;
+    $("#weightChange").classList.toggle("positive-progress",change<0);
+  }else{
+    $("#weightChange").textContent=entries.length?"Starting point":"—";
+    $("#weightChange").classList.remove("positive-progress");
+  }
+  const measurement=value=>value?`${Number(value).toFixed(1)} in`:"—";
+  $("#weighInTableBody").innerHTML=entries.length?entries.map(x=>`<tr>
+    <td>${x.date}</td><td><b>${x.weight.toFixed(1)} lb</b></td><td>${x.dressSize?`Size ${x.dressSize}`:"—"}</td>
+    <td>${measurement(x.bust)}</td><td>${measurement(x.waist)}</td><td>${measurement(x.hips)}</td>
+    <td>${escapeHtml(x.notes||"")}</td><td><button class="icon-btn" onclick="deleteItem('weighIns','${x.id}')">×</button></td>
+  </tr>`).join(""):`<tr><td colspan="8" class="empty-state">Add your first weigh-in when you are ready.</td></tr>`;
 }
 
 function startOfWeek(date=new Date()){
