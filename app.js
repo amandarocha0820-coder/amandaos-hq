@@ -263,7 +263,24 @@ function deleteRoutine(id){
   store.set("routineTasks",store.get("routineTasks").filter(x=>x.id!==id));
   renderAll();
 }
-window.deleteItem=deleteItem; window.toggleTask=toggleTask; window.markFiled=markFiled; window.toggleBill=toggleBill; window.toggleRoutineOccurrence=toggleRoutineOccurrence; window.deleteRoutine=deleteRoutine;
+function updateRoutine(id){
+  const routines=store.get("routineTasks");
+  const routine=routines.find(item=>item.id===id);
+  const textInput=document.querySelector(`[data-routine-text="${id}"]`);
+  const scheduleSelect=document.querySelector(`[data-routine-schedule="${id}"]`);
+  if(!routine||!textInput||!scheduleSelect) return;
+  const text=textInput.value.trim();
+  if(!text){ textInput.focus(); return; }
+  routine.text=text;
+  routine.schedule=scheduleSelect.value;
+  store.set("routineTasks",routines);
+  renderAll();
+}
+function closeManageAndAddRoutine(){
+  $("#manageRoutinesModal").close();
+  openModal("routineModal");
+}
+window.deleteItem=deleteItem; window.toggleTask=toggleTask; window.markFiled=markFiled; window.toggleBill=toggleBill; window.toggleRoutineOccurrence=toggleRoutineOccurrence; window.deleteRoutine=deleteRoutine; window.updateRoutine=updateRoutine; window.closeManageAndAddRoutine=closeManageAndAddRoutine;
 
 function renderCallahan(){
   const all=store.get("callahanPurchases"), month=all.filter(x=>monthKey(x.date)===currentMonth());
@@ -510,6 +527,12 @@ function renderMomentum(){
     const dayPercent=dayTotal?Math.round(dayDone/dayTotal*100):0;
     return `<div class="daily-trend-row"><span>${group.label.slice(0,3)}</span><div class="daily-trend-bar" aria-label="${group.label}: ${dayPercent}% complete"><i style="width:${dayPercent}%"></i><b style="width:${100-dayPercent}%"></b></div><strong>${dayPercent}%</strong></div>`;
   }).join("");
+
+  const scheduleOrder=["Daily","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday","Weekly"];
+  const scheduleOptions=selected=>scheduleOrder.map(schedule=>`<option ${schedule===selected?"selected":""}>${schedule}</option>`).join("");
+  $("#manageRoutineList").innerHTML=routines.length
+    ? [...routines].sort((a,b)=>scheduleOrder.indexOf(a.schedule)-scheduleOrder.indexOf(b.schedule)).map(task=>`<div class="manage-routine-row"><input data-routine-text="${task.id}" value="${escapeHtml(task.text)}" aria-label="Goal wording"><select data-routine-schedule="${task.id}" aria-label="Goal schedule">${scheduleOptions(task.schedule)}</select><button class="small-btn" type="button" onclick="updateRoutine('${task.id}')">Save</button><button class="routine-delete manage-delete" type="button" aria-label="Delete ${escapeHtml(task.text)}" onclick="deleteRoutine('${task.id}')">×</button></div>`).join("")
+    : `<div class="empty-state routine-empty"><b>No goals added yet.</b><span>Use Add Another Goal to build your week.</span></div>`;
 }
 
 function renderBrain(){
