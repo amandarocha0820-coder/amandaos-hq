@@ -206,7 +206,7 @@
         <section class="momentum-card card">
           <div class="momentum-heading">
             <div><span class="card-label">WEEKLY MOMENTUM</span><h3>Turn the wheel green</h3><p class="muted">Every task starts red. Reach 80% green for the week to earn your reward.</p></div>
-            <div class="momentum-heading-actions"><button class="ghost-btn" data-open="weeklyRewardModal"><span id="weeklyRewardButton">Set Weekly Reward</span></button><button class="primary-btn" data-open="routineModal">＋ Add Routine</button></div>
+            <div class="momentum-heading-actions"><button class="ghost-btn" data-open="weeklyRewardModal"><span id="weeklyRewardButton">Set Weekly Reward</span></button><button class="ghost-btn" data-open="manageRoutinesModal">Manage All Goals</button><button class="primary-btn" data-open="routineModal">＋ Add Routine</button></div>
           </div>
           <div id="weeklyRewardProgress" class="momentum-goal-progress">Set something worth working toward this week.</div>
           <div class="momentum-layout">
@@ -480,6 +480,15 @@
       <label>When?<select name="schedule"><option>Daily</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option><option>Weekly</option></select></label>
       <p class="muted">Daily creates one piece for every day. Weekly creates one piece that can be completed anytime before the week resets.</p>
       <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Add to Wheel</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="manageRoutinesModal" class="modal manage-routines-modal">
+    <form method="dialog">
+      <div class="modal-header"><div><span class="card-label">WEEKLY MOMENTUM</span><h3>Manage All Goals</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <p class="muted">Everything you have added is listed here, even when it is not scheduled to appear today.</p>
+      <div id="manageRoutineList" class="manage-routine-list"></div>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Done</button><button class="primary-btn" type="button" onclick="closeManageAndAddRoutine()">＋ Add Another Goal</button></div>
     </form>
   </dialog>
 
