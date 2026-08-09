@@ -197,17 +197,18 @@ function currentMomentumStats(){
   const today=new Date(), todayKey=dateKeyFromDate(today);
   const weekdays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   const todayName=weekdays[today.getDay()];
-  const dailyItems=routines.filter(task=>task.schedule==="Daily"||task.schedule===todayName)
+  const dailyItems=(todayKey<MOMENTUM_START_DATE?[]:routines.filter(task=>task.schedule==="Daily"||task.schedule===todayName))
     .map(task=>({key:`${todayKey}:${task.id}`,done:!!completed[`${todayKey}:${task.id}`]}));
   const monday=startOfWeek(today), weekKey=dateKeyFromDate(monday), weeklyItems=[];
   routines.forEach(task=>{
     if(task.schedule==="Daily"){
-      for(let index=0;index<7;index++){const date=new Date(monday);date.setDate(monday.getDate()+index);const key=`${dateKeyFromDate(date)}:${task.id}`;weeklyItems.push({key,done:!!completed[key]});}
+      for(let index=0;index<7;index++){const date=new Date(monday);date.setDate(monday.getDate()+index);const dateKey=dateKeyFromDate(date);if(dateKey<MOMENTUM_START_DATE)continue;const key=`${dateKey}:${task.id}`;weeklyItems.push({key,done:!!completed[key]});}
     }else if(task.schedule==="Weekly"){
+      if(dateKeyFromDate(new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+6))<MOMENTUM_START_DATE)return;
       const key=`${weekKey}:weekly:${task.id}`;weeklyItems.push({key,done:!!completed[key]});
     }else{
       const dayIndex=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].indexOf(task.schedule);
-      if(dayIndex>=0){const date=new Date(monday);date.setDate(monday.getDate()+dayIndex);const key=`${dateKeyFromDate(date)}:${task.id}`;weeklyItems.push({key,done:!!completed[key]});}
+      if(dayIndex>=0){const date=new Date(monday);date.setDate(monday.getDate()+dayIndex);const dateKey=dateKeyFromDate(date);if(dateKey<MOMENTUM_START_DATE)return;const key=`${dateKey}:${task.id}`;weeklyItems.push({key,done:!!completed[key]});}
     }
   });
   const percent=items=>items.length?Math.round(items.filter(x=>x.done).length/items.length*100):0;
@@ -405,6 +406,8 @@ function startOfWeek(date=new Date()){
   return d;
 }
 function dateKeyFromDate(d){ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-"); }
+const MOMENTUM_START_DATE="2026-08-10";
+
 function renderMomentum(){
   const routines=store.get("routineTasks");
   const completed=store.getObj("routineCompletions",{});
@@ -421,11 +424,13 @@ function renderMomentum(){
   routines.forEach(task=>{
     if(task.schedule==="Daily"){
       dates.forEach((day,index)=>{
+        if(day.key<MOMENTUM_START_DATE) return;
         const key=`${day.key}:${task.id}`;
         const item={task,key,done:!!completed[key],day:day.label};
         groups[index].items.push(item); occurrences.push(item);
       });
     }else if(task.schedule==="Weekly"){
+      if(dates[6].key<MOMENTUM_START_DATE) return;
       const weekKey=dateKeyFromDate(monday);
       const key=`${weekKey}:weekly:${task.id}`;
       const item={task,key,done:!!completed[key],day:"Weekly"};
@@ -434,6 +439,7 @@ function renderMomentum(){
       const index=weekdays.indexOf(task.schedule);
       if(index>=0){
         const day=dates[index], key=`${day.key}:${task.id}`;
+        if(day.key<MOMENTUM_START_DATE) return;
         const item={task,key,done:!!completed[key],day:day.label};
         groups[index].items.push(item); occurrences.push(item);
       }
@@ -471,10 +477,34 @@ function renderMomentum(){
   $("#momentumTotal").textContent=total;
   chart.setAttribute("aria-label",`${done} of ${total} weekly tasks completed; ${percent} percent green`);
 
-  $("#routineWeekList").innerHTML=routines.length?groups.filter(group=>group.items.length).map(group=>{
-    const dateText=group.date?`<small>${group.date.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</small>`:"<small>Complete by Sunday</small>";
+  const today=new Date();
+  const todayKey=dateKeyFromDate(today);
+  const todayIndex=dates.findIndex(day=>day.key===todayKey);
+  const dailyItems=todayKey>=MOMENTUM_START_DATE
+    ? routines.filter(task=>task.schedule==="Daily").map(task=>{
+        const key=`${todayKey}:${task.id}`;
+        return {task,key,done:!!completed[key],day:"Daily"};
+      })
+    : [];
+  const visibleGroups=[];
+  if(dailyItems.length) visibleGroups.push({label:"Daily",date:null,subtitle:"Stays here every day",items:dailyItems});
+  if(todayIndex>=0&&groups[todayIndex].items.some(item=>item.task.schedule!=="Daily")){
+    visibleGroups.push({
+      label:`Today's ${dates[todayIndex].label} Goals`,
+      date:dates[todayIndex].date,
+      items:groups[todayIndex].items.filter(item=>item.task.schedule!=="Daily")
+    });
+  }
+  if(groups[7].items.length) visibleGroups.push(groups[7]);
+
+  $("#routineWeekList").innerHTML=visibleGroups.length?visibleGroups.map(group=>{
+    const dateText=group.subtitle
+      ? `<small>${group.subtitle}</small>`
+      : group.date
+        ? `<small>${group.date.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</small>`
+        : "<small>Complete by Sunday</small>";
     return `<section class="routine-day"><div class="routine-day-heading"><h4>${group.label}</h4>${dateText}</div>${group.items.map(item=>`<div class="routine-row ${item.done?"done":""}"><label><input type="checkbox" ${item.done?"checked":""} onchange="toggleRoutineOccurrence('${item.key}')"><span>${escapeHtml(item.task.text)}</span></label><button class="routine-delete" aria-label="Remove ${escapeHtml(item.task.text)}" onclick="deleteRoutine('${item.task.id}')">×</button></div>`).join("")}</section>`;
-  }).join(""):`<div class="empty-state routine-empty"><b>Your wheel is ready.</b><span>Add the daily and weekly tasks you want to turn green.</span></div>`;
+  }).join(""):`<div class="empty-state routine-empty"><b>${todayKey<MOMENTUM_START_DATE?"Your new week begins Monday.":"Your wheel is ready."}</b><span>${todayKey<MOMENTUM_START_DATE?"Daily and weekday goals will appear here starting August 10.":"Add daily, weekday, or weekly goals to get started."}</span></div>`;
   $("#dailyTaskTrend").innerHTML=groups.slice(0,7).map(group=>{
     const dayTotal=group.items.length, dayDone=group.items.filter(x=>x.done).length;
     const dayPercent=dayTotal?Math.round(dayDone/dayTotal*100):0;
