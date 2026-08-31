@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AmandaOS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🐼</div>
+        <div>
+        <h1>AmandaOS</h1>
+<p>Personal Command Center</p>
+        </div>
+      </div>
+
+      <nav>
+        <button class="nav-btn active" data-view="dashboard">🏠 Dashboard</button>
+        <button class="nav-btn" data-view="callahan">❤️ Callahan</button>
+        <button class="nav-btn" data-view="weighin">⚖️ Weigh-In</button>
+        <button class="nav-btn" data-view="money">💵 Money</button>
+        <button class="nav-btn" data-view="brain">🧠 Brain</button>
+        <button class="nav-btn" data-view="tasks">✅ Tasks</button>
+        <button class="nav-btn" data-view="settings">⚙️ Settings</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-dot"></div>
+        <span>Local prototype</span>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MISSION CONTROL</p>
+          <h2 id="greeting">Good morning, Amanda</h2>
+          <p id="todayDate" class="muted"></p>
+        </div>
+        <div class="topbar-actions">
+          <button class="ghost-btn" id="morningBriefBtn">☀️ Morning Brief</button>
+          <button class="primary-btn" data-open="quickCaptureModal">＋ Quick Capture</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="view active-view">
+        <section class="daily-affirmation card">
+          <div class="affirmation-mark">🐼</div>
+          <div><span class="card-label">TODAY’S AFFIRMATION</span><blockquote id="dailyAffirmation">I only need to take the next right step.</blockquote></div>
+        </section>
+
+     <section class="today-panel card">
+
+    <div class="today-header">
+        <div>
+            <p class="card-label">TODAY'S MISSION</p>
+            <h2>What do I need to do today?</h2>
+            <p class="muted">
+                Everything that needs your attention, all in one place.
+            </p>
+        </div>
+
+        <button class="primary-btn" data-open="quickCaptureModal">
+            + Quick Capture
+        </button>
+    </div>
+
+    <div class="today-grid">
+
+<div class="today-box appointments-box">
+
+  <div class="today-box-header">
+
+    <h3>📅 Appointments</h3>
+
+    <div class="appointment-buttons">
+
+ <button
+  id="connectGoogleCalendarBtn"
+  class="calendar-sync-status"
+  type="button"
+>
+  <span id="googleCalendarStatus">⚪ Not Synced</span>
+</button>
+      <button
+        class="small-btn"
+        type="button"
+        data-open="allAppointmentsModal"
+      >
+        View All
+      </button>
+
+      <button
+        class="icon-btn"
+        type="button"
+        data-open="eventModal"
+        aria-label="Add appointment"
+      >
+        ＋
+      </button>
+
+    </div>
+
+  </div>
+
+  <strong id="todayAppointmentCount">0</strong>
+
+  <p class="next-label">
+    NEXT APPOINTMENT
+  </p>
+
+  <p id="todayNextAppointment">
+    Nothing scheduled
+  </p>
+
+  <div
+    id="todayAppointmentList"
+    class="appointment-list"
+  ></div>
+
+</div>
+
+        <div class="today-box">
+            <h3>💬 Replies / Follow Ups</h3>
+            <p>Nothing waiting.</p>
+        </div>
+
+        <div class="today-box">
+            <h3>✅ Tasks Due Today</h3>
+            <strong id="todayTaskCount">0</strong>
+            <p id="todayTaskSummary">Nothing due</p>
+        </div>
+
+    </div>
+
+</section>
+
+        <div class="dashboard-grid">
+          <article class="card alerts-card">
+            <div class="card-header">
+              <div><span class="card-label">ALERTS</span><h3>Needs attention</h3></div>
+              <span class="count-badge" id="alertCount">0</span>
+            </div>
+            <div id="alertsList" class="list empty-state">Nothing urgent. Nice!</div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div><span class="card-label">TASKS</span><h3>Today</h3></div>
+              <button class="icon-btn" data-open="taskModal">＋</button>
+            </div>
+            <div id="taskPreview" class="list empty-state">No tasks yet.</div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div><span class="card-label">BRAIN</span><h3>Inbox</h3></div>
+              <button class="icon-btn" data-open="brainModal">＋</button>
+            </div>
+            <div class="metric"><strong id="brainCount">0</strong><span>thoughts waiting</span></div>
+            <div id="brainPreview" class="list compact"></div>
+          </article>
+
+          <article class="card accent-card">
+            <div class="card-header">
+              <div><span class="card-label">CALLAHAN</span><h3>This month</h3></div>
+              <button class="icon-btn" data-open="callahanModal">＋</button>
+            </div>
+            <div class="metric"><strong id="callahanMonthTotal">$0.00</strong><span>total purchased</span></div>
+            <div class="mini-grid">
+              <div><b id="callahanPurchaseCount">0</b><small>Purchases</small></div>
+              <div><b id="receiptNeedsFiling">0</b><small>Receipts to file</small></div>
+            </div>
+          </article>
+
+          <article class="card money-card">
+            <div class="card-header">
+              <div><span class="card-label">MONEY</span><h3>This month</h3></div>
+              <button class="icon-btn" data-open="transferModal">＋</button>
+            </div>
+            <div class="mini-grid">
+              <div><b id="dashboardSentToPaul">$0.00</b><small>Sent to Paul</small></div>
+              <div><b id="dashboardMoneyLeft">$0.00</b><small>Income unassigned</small></div>
+            </div>
+            <div id="moneyPreview" class="list compact"></div>
+          </article>
+
+          <article class="card accent-card">
+            <div class="card-header">
+              <div><span class="card-label">WEDDING DRESS GOAL</span><h3>August 2027</h3></div>
+              <button class="icon-btn" data-open="weighInModal">＋</button>
+            </div>
+            <div class="mini-grid">
+              <div><b id="dashboardLatestWeight">—</b><small>Latest weight</small></div>
+              <div><b id="dashboardLatestSize">—</b><small>Latest dress size</small></div>
+            </div>
+            <div class="goal-sizes"><span>Goal: size 16</span><span>Stretch: size 14</span></div>
+          </article>
+
+        </div>
+
+        <section class="momentum-card card">
+          <div class="momentum-heading">
+            <div><span class="card-label">WEEKLY MOMENTUM</span><h3>Turn the wheel green</h3><p class="muted">Every task starts red. Reach 80% green for the week to earn your reward.</p></div>
+            <div class="momentum-heading-actions"><button class="ghost-btn" data-open="weeklyRewardModal"><span id="weeklyRewardButton">Set Weekly Reward</span></button><button class="ghost-btn" data-open="manageRoutinesModal">Manage All Goals</button><button class="primary-btn" data-open="routineModal">＋ Add Routine</button></div>
+          </div>
+          <div id="weeklyRewardProgress" class="momentum-goal-progress">Set something worth working toward this week.</div>
+          <div class="momentum-layout">
+            <div class="momentum-chart-wrap">
+              <div id="momentumChart" class="momentum-chart" role="img" aria-label="Weekly task completion pie chart"><div><strong id="momentumPercent">0%</strong><span>green</span></div></div>
+              <p><b id="momentumComplete">0</b> of <b id="momentumTotal">0</b> completed</p>
+            </div>
+            <div id="routineWeekList" class="routine-week-list"></div>
+          </div>
+          <div class="momentum-trend">
+            <div class="trend-heading"><div><span class="card-label">DAILY TREND</span><h4>This week by day</h4></div><span>Green completed · Red remaining</span></div>
+            <div id="dailyTaskTrend" class="daily-task-trend"></div>
+          </div>
+        </section>
+
+        <section class="quick-actions card">
+          <div class="card-header">
+            <div><span class="card-label">QUICK ACTIONS</span><h3>Capture it before it disappears</h3></div>
+          </div>
+          <div class="action-grid">
+            <button data-open="callahanModal">❤️ Bought for Callahan</button>
+            <button data-open="transferModal">↗ Send to Paul</button>
+            <button data-open="brainModal">🧠 Brain Dump</button>
+            <button data-open="taskModal">✅ Add Task</button>
+            <button data-open="eventModal">📅 Add Event</button>
+            <button data-open="alertModal">🚨 Add Alert</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="callahan" class="view">
+        <div class="section-heading">
+          <div><p class="eyebrow">FAMILY TRACKING</p><h2>Callahan Purchases</h2></div>
+          <div class="heading-actions">
+            <button class="ghost-btn" id="exportCallahanCsv">Export CSV</button>
+            <button class="primary-btn" data-open="callahanModal">＋ Add Purchase</button>
+          </div>
+        </div>
+        <div class="summary-cards">
+          <div class="card metric-card"><span>This month</span><strong id="callahanPageTotal">$0.00</strong></div>
+          <div class="card metric-card"><span>Receipts not filed</span><strong id="callahanPageUnfiled">0</strong></div>
+          <div class="card metric-card"><span>Entries</span><strong id="callahanPageCount">0</strong></div>
+        </div>
+        <div class="card table-card">
+          <table>
+            <thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Store</th><th>Amount</th><th>Receipt box?</th><th></th></tr></thead>
+            <tbody id="callahanTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="money" class="view">
+        <div class="section-heading">
+          <div><p class="eyebrow">HOUSEHOLD MONEY</p><h2>Paychecks & Bills</h2><p class="muted">See what came in, what must go out, and what is putting pressure on the budget.</p></div>
+          <div class="heading-actions">
+            <button class="ghost-btn" data-open="paycheckModal">＋ Paycheck</button>
+            <button class="primary-btn" data-open="transferModal">↗ Send to Paul</button>
+          </div>
+        </div>
+        <div class="summary-cards money-summary">
+          <div class="card metric-card"><span>Take-home income</span><strong id="moneyIncomeTotal">$0.00</strong></div>
+          <div class="card metric-card"><span>Sent to Paul</span><strong id="moneyTransfersTotal">$0.00</strong></div>
+          <div class="card metric-card"><span>Remaining with Amanda</span><strong id="moneyAvailable">$0.00</strong></div>
+          <div class="card metric-card pressure-card"><span>Biggest pressure</span><strong id="moneyPressure">Add money activity</strong></div>
+        </div>
+        <div class="money-actions">
+          <button class="money-tab active" data-money-panel="paychecksPanel">Paychecks</button>
+          <button class="money-tab" data-money-panel="transfersPanel">Sent to Paul</button>
+          <button class="money-tab" data-money-panel="spendingPanel">Paid Directly</button>
+          <button class="money-tab" data-money-panel="billsPanel">Optional Bills</button>
+          <button class="money-tab" data-money-panel="reviewPanel">Budget Review</button>
+        </div>
+        <div id="paychecksPanel" class="money-panel active">
+          <div class="card table-card"><div class="table-title"><h3>Paychecks</h3><button class="primary-btn" data-open="paycheckModal">＋ Add Paycheck</button></div>
+            <table><thead><tr><th>Pay date</th><th>Source</th><th>Gross</th><th>Deductions</th><th>Take-home</th><th></th></tr></thead><tbody id="paycheckTableBody"></tbody></table>
+          </div>
+        </div>
+        <div id="transfersPanel" class="money-panel">
+          <div class="card table-card"><div class="table-title"><h3>Money Sent to Paul</h3><button class="primary-btn" data-open="transferModal">↗ Add Transfer</button></div>
+            <table><thead><tr><th>Date</th><th>From paycheck</th><th>Purpose</th><th>Notes</th><th>Amount</th><th></th></tr></thead><tbody id="transferTableBody"></tbody></table>
+          </div>
+        </div>
+        <div id="billsPanel" class="money-panel">
+          <div class="card table-card"><div class="table-title"><h3>Bills</h3><button class="primary-btn" data-open="billModal">＋ Add Bill</button></div>
+            <table><thead><tr><th>Due</th><th>Bill</th><th>Amount</th><th>Frequency</th><th>Auto-pay</th><th>Status</th><th></th></tr></thead><tbody id="billTableBody"></tbody></table>
+          </div>
+        </div>
+        <div id="spendingPanel" class="money-panel">
+          <div class="card table-card"><div class="table-title"><h3>Money Amanda Paid Directly</h3><button class="primary-btn" data-open="spendingModal">＋ Add Payment</button></div>
+            <table><thead><tr><th>Date</th><th>What</th><th>Category</th><th>Need or flexible?</th><th>Amount</th><th></th></tr></thead><tbody id="spendingTableBody"></tbody></table>
+          </div>
+        </div>
+        <div id="reviewPanel" class="money-panel">
+          <div class="budget-review-grid">
+            <article class="card"><span class="card-label">BUDGET PRESSURE</span><h3 id="pressureHeading">Add your money details</h3><p id="pressureCopy" class="muted">Once paychecks, bills, and spending are entered, AmandaOS will show where the pressure is coming from.</p></article>
+            <article class="card"><span class="card-label">MONTHLY FLOW</span><div id="budgetFlow" class="budget-flow"></div></article>
+            <article class="card"><span class="card-label">SPENDING BY CATEGORY</span><div id="categoryBreakdown" class="category-breakdown"></div></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="weighin" class="view">
+        <div class="section-heading">
+          <div><p class="eyebrow">WEDDING DRESS JOURNEY</p><h2>Weigh-In & Size Progress</h2><p class="muted">Track the scale, dress size, measurements, and how you feel—without letting one number tell the whole story.</p></div>
+          <button class="primary-btn" data-open="weighInModal">＋ Add Weigh-In</button>
+        </div>
+        <div class="weighin-goal-banner card">
+          <div><span class="card-label">TARGET DATE</span><strong>August 2027</strong></div>
+          <div><span class="card-label">MAIN GOAL</span><strong>Wedding dress size 16</strong><small class="goal-last-weight">Last weight recorded: <b id="goalLastWeight">—</b></small></div>
+          <div><span class="card-label">FANTASTIC GOAL</span><strong>Wedding dress size 14</strong></div>
+        </div>
+        <div class="summary-cards">
+          <div class="card metric-card"><span>Latest weight</span><strong id="latestWeight">—</strong></div>
+          <div class="card metric-card"><span>Latest dress size</span><strong id="latestDressSize">—</strong></div>
+          <div class="card metric-card"><span>Change since first entry</span><strong id="weightChange">—</strong></div>
+        </div>
+        <div class="card weight-trend-card">
+          <div class="trend-heading"><div><span class="card-label">WEIGHT TREND</span><h3>Progress over time</h3></div><span id="weightTrendSummary">Add at least two weigh-ins to see a trend.</span></div>
+          <div class="weight-chart-shell"><canvas id="weightTrendCanvas" aria-label="Weight trend chart"></canvas><div id="weightTrendEmpty" class="weight-trend-empty">Your trend line will appear here after two weigh-ins.</div></div>
+        </div>
+        <div class="card table-card"><div class="table-title"><h3>Progress History</h3><button class="primary-btn" data-open="weighInModal">＋ Add Weigh-In</button></div>
+          <table><thead><tr><th>Date</th><th>Weight</th><th>Dress size</th><th>Bust</th><th>Waist</th><th>Hips</th><th>Notes</th><th></th></tr></thead><tbody id="weighInTableBody"></tbody></table>
+        </div>
+      </section>
+
+      <section id="brain" class="view">
+        <div class="section-heading">
+          <div><p class="eyebrow">EXTERNAL MEMORY</p><h2>Brain Inbox</h2></div>
+          <button class="primary-btn" data-open="brainModal">＋ Add Thought</button>
+        </div>
+        <div id="brainBoard" class="brain-board"></div>
+      </section>
+
+      <section id="tasks" class="view">
+        <div class="section-heading">
+          <div><p class="eyebrow">ACTION CENTER</p><h2>Tasks</h2></div>
+          <button class="primary-btn" data-open="taskModal">＋ Add Task</button>
+        </div>
+        <div id="taskBoard" class="task-board"></div>
+      </section>
+
+      <section id="settings" class="view">
+        <div class="section-heading">
+          <div><p class="eyebrow">SYSTEM</p><h2>Settings</h2></div>
+        </div>
+        <div class="card settings-card">
+          <h3>Prototype tools</h3>
+          <p class="muted">This version saves data in this browser only.</p>
+          <button class="danger-btn" id="clearAllData">Clear all prototype data</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="callahanModal" class="modal">
+    <form method="dialog" id="callahanForm">
+      <div class="modal-header"><div><span class="card-label">QUICK CAPTURE</span><h3>Bought for Callahan</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>What did you buy?<input name="item" required /></label>
+        <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
+        <label>Store<input name="store" /></label>
+        <label>Item type
+          <select name="type">
+            <option>Clothing</option><option>Food</option><option>Personal Care</option><option>Medical</option><option>Activities</option><option>Transportation</option><option>Household</option><option>Other</option>
+          </select>
+        </label>
+        <label>Date<input name="date" type="date" required /></label>
+        <label>Who paid?
+          <select name="paidBy"><option>Amanda</option><option>Paul</option><option>Joint</option><option>Other</option></select>
+        </label>
+      </div>
+      <label>Notes<textarea name="notes" rows="3"></textarea></label>
+      <div class="receipt-check">
+        <label><input type="checkbox" name="photoTaken" /> Receipt photo taken</label>
+        <label><input type="checkbox" name="filed" /> Did you put it in the receipt box?</label>
+      </div>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Purchase</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="paycheckModal" class="modal">
+    <form method="dialog" id="paycheckForm">
+      <div class="modal-header"><div><span class="card-label">MONEY IN</span><h3>Add Paycheck</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>Pay date<input name="date" type="date" required /></label>
+        <label>Income source<input name="source" value="Amanda — Allied Universal" required /></label>
+        <label>Gross pay<input name="gross" type="number" step="0.01" min="0" /></label>
+        <label>Taxes and other deductions<input name="deductions" type="number" step="0.01" min="0" /></label>
+        <label>Truck payment deduction<input name="truck" type="number" step="0.01" min="0" value="200" /></label>
+        <label>Actual take-home pay<input name="net" type="number" step="0.01" min="0" required /></label>
+      </div>
+      <label>Notes<textarea name="notes" rows="2"></textarea></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Paycheck</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="transferModal" class="modal">
+    <form method="dialog" id="transferForm">
+      <div class="modal-header"><div><span class="card-label">HOUSEHOLD MONEY</span><h3>Money Sent to Paul</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>Date sent<input name="date" type="date" required /></label>
+        <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
+        <label>From paycheck<select name="paycheckId" id="transferPaycheckSelect"><option value="">Not linked to a paycheck</option></select></label>
+        <label>Purpose<select name="purpose"><option>General household</option><option>Household bills</option><option>Groceries</option><option>Storage</option><option>Debt</option><option>Vehicle</option><option>Rent or housing</option><option>Medical</option><option>Other</option></select></label>
+      </div>
+      <label>Optional note<input name="notes" placeholder="What was this meant to cover?" /></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Transfer</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="billModal" class="modal">
+    <form method="dialog" id="billForm">
+      <div class="modal-header"><div><span class="card-label">MONEY OUT</span><h3>Add Bill</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>Bill name<input name="name" required /></label>
+        <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
+        <label>Due date<input name="dueDate" type="date" required /></label>
+        <label>Frequency<select name="frequency"><option>Monthly</option><option>Weekly</option><option>Every paycheck</option><option>One time</option></select></label>
+        <label>Category<select name="category"><option>Housing</option><option>Utilities</option><option>Vehicle</option><option>Insurance</option><option>Storage</option><option>Phone</option><option>Debt</option><option>Medical</option><option>Other</option></select></label>
+        <label><input name="autoPay" type="checkbox" /> Auto-pay</label>
+        <label><input name="paid" type="checkbox" /> Already paid</label>
+      </div>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Bill</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="spendingModal" class="modal">
+    <form method="dialog" id="spendingForm">
+      <div class="modal-header"><div><span class="card-label">SPENDING</span><h3>Add Purchase</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>What was it?<input name="description" required /></label>
+        <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
+        <label>Date<input name="date" type="date" required /></label>
+        <label>Category<select name="category"><option>Groceries</option><option>Gas</option><option>Restaurants</option><option>Subscriptions</option><option>Shopping</option><option>Entertainment</option><option>Medical</option><option>Family</option><option>Fees</option><option>Other</option></select></label>
+        <label>Type<select name="flexibility"><option>Required</option><option>Necessary but adjustable</option><option>Flexible</option></select></label>
+      </div>
+      <label>Notes<textarea name="notes" rows="2"></textarea></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Spending</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="weighInModal" class="modal">
+    <form method="dialog" id="weighInForm">
+      <div class="modal-header"><div><span class="card-label">WEDDING DRESS JOURNEY</span><h3>Add Weigh-In</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="form-grid">
+        <label>Date<input name="date" type="date" required /></label>
+        <label>Weight (lb)<input name="weight" type="number" step="0.1" min="0" required /></label>
+        <label>Current wedding dress size<input name="dressSize" type="number" step="1" min="0" /></label>
+        <label>Bust (inches)<input name="bust" type="number" step="0.1" min="0" /></label>
+        <label>Waist (inches)<input name="waist" type="number" step="0.1" min="0" /></label>
+        <label>Hips (inches)<input name="hips" type="number" step="0.1" min="0" /></label>
+      </div>
+      <label>Notes<textarea name="notes" rows="3" placeholder="Energy, fit, wins, challenges, or anything you want to remember"></textarea></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Weigh-In</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="weeklyRewardModal" class="modal">
+    <form method="dialog" id="weeklyRewardForm">
+      <div class="modal-header"><div><span class="card-label">WEEKLY MOMENTUM</span><h3>Set This Week’s Reward</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>What are you working toward?<input id="weeklyRewardInput" name="reward" required placeholder="Example: A night out with Paul" /></label>
+      <p class="muted">Choose something that will feel good to earn when you reach 80% green for the week.</p>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Reward</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="routineModal" class="modal">
+    <form method="dialog" id="routineForm">
+      <div class="modal-header"><div><span class="card-label">WEEKLY MOMENTUM</span><h3>Add a Recurring Task</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>What needs to get done?<input name="text" required placeholder="Example: Put laundry away" /></label>
+      <label>When?<select name="schedule"><option>Daily</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option><option>Weekly</option></select></label>
+      <p class="muted">Daily creates one piece for every day. Weekly creates one piece that can be completed anytime before the week resets.</p>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Add to Wheel</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="manageRoutinesModal" class="modal manage-routines-modal">
+    <form method="dialog">
+      <div class="modal-header"><div><span class="card-label">WEEKLY MOMENTUM</span><h3>Manage All Goals</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <p class="muted">Everything you have added is listed here, even when it is not scheduled to appear today.</p>
+      <div id="manageRoutineList" class="manage-routine-list"></div>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Done</button><button class="primary-btn" type="button" onclick="closeManageAndAddRoutine()">＋ Add Another Goal</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="brainModal" class="modal">
+    <form method="dialog" id="brainForm">
+      <div class="modal-header"><div><span class="card-label">BRAIN DUMP</span><h3>What is in your head?</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>Thought<textarea name="text" rows="5" required autofocus></textarea></label>
+      <label>Optional bucket
+        <select name="bucket"><option>Unsorted</option><option>Idea</option><option>Remember</option><option>Shopping</option><option>Business</option><option>Family</option></select>
+      </label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Thought</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="taskModal" class="modal">
+    <form method="dialog" id="taskForm">
+      <div class="modal-header"><div><span class="card-label">ACTION CENTER</span><h3>Add Task</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>Task<input name="text" required /></label>
+      <div class="form-grid">
+        <label>Due date<input name="dueDate" type="date" /></label>
+        <label>Priority<select name="priority"><option>Normal</option><option>Important</option><option>Urgent</option></select></label>
+      </div>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Task</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="eventModal" class="modal">
+    <form method="dialog" id="eventForm">
+      <div class="modal-header"><div><span class="card-label">CALENDAR</span><h3>Add Event</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>Event<input name="title" required /></label>
+      <div class="form-grid">
+        <label>Date<input name="date" type="date" required /></label>
+        <label>Time<input name="time" type="time" /></label>
+      </div>
+      <label>Location<input name="location" /></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Event</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="alertModal" class="modal">
+    <form method="dialog" id="alertForm">
+      <div class="modal-header"><div><span class="card-label">ALERT</span><h3>Add Alert</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>Alert message<input name="text" required /></label>
+      <label>Type<select name="type"><option>General</option><option>Vendor Payment</option><option>Application</option><option>Medication Pickup</option></select></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Alert</button></div>
+    </form>
+  </dialog>
+
+
+  <dialog id="quickCaptureModal" class="modal action-modal">
+    <div class="modal-header"><div><span class="card-label">QUICK CAPTURE</span><h3>What happened?</h3></div><button class="close-btn" data-close="quickCaptureModal">×</button></div>
+    <div class="action-grid modal-grid">
+      <button data-jump="callahanModal">❤️ Bought for Callahan</button>
+      <button data-jump="transferModal">↗ Send to Paul</button>
+      <button data-jump="brainModal">🧠 Brain Dump</button>
+      <button data-jump="taskModal">✅ Add Task</button>
+      <button data-jump="eventModal">📅 Add Event</button>
+      <button data-jump="alertModal">🚨 Add Alert</button>
+    </div>
+  </dialog>
+
+  <dialog id="morningBriefModal" class="modal">
+    <div class="modal-header"><div><span class="card-label">MORNING BRIEF</span><h3>Your command summary</h3></div><button class="close-btn" data-close="morningBriefModal">×</button></div>
+    <div id="morningBriefContent" class="briefing"></div>
+  </dialog>
+<dialog id="allAppointmentsModal" class="modal">
+  <div class="appointments-modal-content">
+
+    <div class="modal-header">
+      <div>
+        <span class="card-label">CALENDAR</span>
+        <h3>All Appointments</h3>
+      </div>
+
+      <button
+        class="close-btn"
+        type="button"
+        data-close="allAppointmentsModal"
+      >
+        ×
+      </button>
+    </div>
+
+    <div id="allAppointmentsList" class="all-appointments-list">
+      No appointments saved.
+    </div>
+
+  </div>
+</dialog>
+  <div id="celebrationLayer" class="celebration-layer" aria-live="polite" aria-atomic="true">
+    <div id="celebrationToast" class="celebration-toast"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
