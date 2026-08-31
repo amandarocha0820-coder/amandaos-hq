@@ -1,79 +1,60 @@
 (() => {
-  function weekProgressSnapshot(){
-    const routines=store.get("routineTasks");
-    const completed=store.getObj("routineCompletions",{});
-    const monday=startOfWeek();
-    const weekdays=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-    const occurrences=[];
+  let replacing = false;
 
-    routines.forEach(task=>{
-      if(task.schedule==="Daily"){
-        weekdays.forEach((_,index)=>{
-          const date=new Date(monday); date.setDate(monday.getDate()+index);
-          const dateKey=dateKeyFromDate(date);
-          if(dateKey<MOMENTUM_START_DATE) return;
-          const key=`${dateKey}:${task.id}`;
-          occurrences.push({key,done:!!completed[key]});
-        });
-      }else if(task.schedule==="Weekly"){
-        const weekKey=dateKeyFromDate(monday);
-        const key=`${weekKey}:weekly:${task.id}`;
-        occurrences.push({key,done:!!completed[key]});
-      }else{
-        const index=weekdays.indexOf(task.schedule);
-        if(index<0) return;
-        const date=new Date(monday); date.setDate(monday.getDate()+index);
-        const dateKey=dateKeyFromDate(date);
-        if(dateKey<MOMENTUM_START_DATE) return;
-        const key=`${dateKey}:${task.id}`;
-        occurrences.push({key,done:!!completed[key]});
-      }
-    });
-
-    const total=occurrences.length;
-    const done=occurrences.filter(x=>x.done).length;
-    const percent=total?Math.round(done/total*100):0;
-    return {total,done,percent};
-  }
-
-  function renderSingleWeeklyBar(){
-    const trend=document.getElementById("dailyTaskTrend");
-    if(!trend) return;
-    const {total,done,percent}=weekProgressSnapshot();
-    const trendCard=trend.closest(".momentum-trend");
-    if(trendCard){
-      const label=trendCard.querySelector(".card-label");
-      const heading=trendCard.querySelector("h4");
-      const helper=trendCard.querySelector(".trend-heading > span");
-      if(label) label.textContent="WEEKLY PROGRESS";
-      if(heading) heading.textContent="This week";
-      if(helper) helper.textContent="Reach 80% to earn your weekly reward";
-    }
-
-    trend.innerHTML=`
-      <div class="weekly-progress-row">
-        <div class="weekly-progress-meta">
-          <span>${done} of ${total} completed</span>
-          <strong>${percent}%</strong>
-        </div>
-        <div class="weekly-progress-track" role="progressbar" aria-label="Weekly progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}">
-          <i style="width:${Math.min(percent,100)}%"></i>
-          <span class="weekly-goal-marker" title="80% goal"></span>
-        </div>
-        <small>${percent>=80?"🎉 Weekly goal reached — reward earned!":"80% unlocks your weekly reward"}</small>
-      </div>`;
-  }
-
-  const originalRenderMomentum=window.renderMomentum;
-  if(typeof originalRenderMomentum==="function"){
-    window.renderMomentum=function(){
-      originalRenderMomentum();
-      renderSingleWeeklyBar();
+  function readWeeklyStatsFromPage(){
+    const percentText = document.getElementById("momentumPercent")?.textContent || "0%";
+    const doneText = document.getElementById("momentumComplete")?.textContent || "0";
+    const totalText = document.getElementById("momentumTotal")?.textContent || "0";
+    return {
+      percent: Math.max(0, Math.min(100, Number(percentText.replace(/[^0-9.-]/g, "")) || 0)),
+      done: Number(doneText.replace(/[^0-9.-]/g, "")) || 0,
+      total: Number(totalText.replace(/[^0-9.-]/g, "")) || 0
     };
   }
 
-  const style=document.createElement("style");
-  style.textContent=`
+  function updateHeading(trend){
+    const card = trend.closest(".momentum-trend") || trend.parentElement;
+    if (!card) return;
+    const label = card.querySelector(".card-label");
+    const heading = card.querySelector("h4");
+    const helper = card.querySelector(".trend-heading > span");
+    if (label) label.textContent = "WEEKLY PROGRESS";
+    if (heading) heading.textContent = "This week";
+    if (helper) helper.textContent = "Reach 80% to earn your weekly reward";
+  }
+
+  function renderWeeklyBar(){
+    const trend = document.getElementById("dailyTaskTrend");
+    if (!trend || replacing) return;
+
+    const { percent, done, total } = readWeeklyStatsFromPage();
+    const alreadyWeekly = trend.querySelector(".weekly-progress-row");
+    const currentPercent = alreadyWeekly?.querySelector(".weekly-progress-meta strong")?.textContent;
+    const currentCount = alreadyWeekly?.querySelector(".weekly-progress-meta span")?.textContent;
+    const wantedCount = `${done} of ${total} completed`;
+    const wantedPercent = `${percent}%`;
+
+    updateHeading(trend);
+    if (alreadyWeekly && currentPercent === wantedPercent && currentCount === wantedCount) return;
+
+    replacing = true;
+    trend.innerHTML = `
+      <div class="weekly-progress-row">
+        <div class="weekly-progress-meta">
+          <span>${wantedCount}</span>
+          <strong>${wantedPercent}</strong>
+        </div>
+        <div class="weekly-progress-track" role="progressbar" aria-label="Weekly progress: ${percent}% complete" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}">
+          <i style="width:${percent}%"></i>
+          <span class="weekly-goal-marker" aria-hidden="true"></span>
+        </div>
+        <small>${percent >= 80 ? "🎉 Weekly goal reached — reward earned!" : "80% unlocks your weekly reward"}</small>
+      </div>`;
+    replacing = false;
+  }
+
+  const style = document.createElement("style");
+  style.textContent = `
     .weekly-progress-row{display:grid;gap:10px;width:100%}
     .weekly-progress-meta{display:flex;justify-content:space-between;gap:16px;align-items:center}
     .weekly-progress-meta span{color:#746b85;font-size:.92rem}
@@ -85,5 +66,13 @@
   `;
   document.head.appendChild(style);
 
-  if(typeof window.renderMomentum==="function") window.renderMomentum();
+  const trend = document.getElementById("dailyTaskTrend");
+  if (trend) {
+    const observer = new MutationObserver(() => {
+      if (!replacing) queueMicrotask(renderWeeklyBar);
+    });
+    observer.observe(trend, { childList: true, subtree: true, characterData: true });
+  }
+
+  renderWeeklyBar();
 })();
