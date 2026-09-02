@@ -174,7 +174,9 @@ handleForm("routineForm","routineTasks",fd=>({
 handleForm("brainForm","brainItems",fd=>({id:uid(), text:fd.get("text"), bucket:fd.get("bucket"), created:new Date().toISOString()}));
 handleForm("taskForm","tasks",fd=>({id:uid(), text:fd.get("text"), dueDate:fd.get("dueDate"), priority:fd.get("priority"), done:false}));
 handleForm("eventForm","events",fd=>({id:uid(), title:fd.get("title"), date:fd.get("date"), time:fd.get("time"), location:fd.get("location")}));
-handleForm("alertForm","alerts",fd=>({id:uid(), text:fd.get("text"), type:fd.get("type"), created:new Date().toISOString()}));
+handleForm("movieForm","movies",fd=>({
+  id:uid(), title:fd.get("title"), where:fd.get("where"), watched:false, created:new Date().toISOString()
+}));
 
 $("#weeklyRewardForm").addEventListener("submit",e=>{
   e.preventDefault();
@@ -192,6 +194,7 @@ function toggleTask(id){ const t=store.get("tasks"); const x=t.find(x=>x.id===id
 function markFiled(key,id){ const a=store.get(key); const x=a.find(x=>x.id===id); if(x)x.filed=true; store.set(key,a); renderAll(); }
 
 function toggleBill(id){ const bills=store.get("bills"); const bill=bills.find(x=>x.id===id); if(bill) bill.paid=!bill.paid; store.set("bills",bills); renderAll(); }
+function toggleMovie(id){ const movies=store.get("movies"); const movie=movies.find(x=>x.id===id); if(movie) movie.watched=!movie.watched; store.set("movies",movies); renderAll(); }
 function currentMomentumStats(){
   const routines=store.get("routineTasks"), completed=store.getObj("routineCompletions",{});
   const today=new Date(), todayKey=dateKeyFromDate(today);
@@ -552,7 +555,7 @@ function renderEvents(){
     .get("events")
     .sort((a,b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
 
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateKey();
   const upcoming = all.find(event => event.date >= today);
 
   // This supports the old dashboard strip if it still exists.
@@ -563,19 +566,21 @@ function renderEvents(){
       ? `${upcoming.title} • ${upcoming.date}${upcoming.time ? " at " + upcoming.time : ""}`
       : "No upcoming events";
   }
+
+  const allAppointmentsList = document.getElementById("allAppointmentsList");
+  if(allAppointmentsList){
+    const visibleEvents = all.filter(event => event.date >= today);
+    allAppointmentsList.innerHTML = visibleEvents.length
+      ? visibleEvents.map(event => `<div class="list-item"><div><b>${escapeHtml(event.title)}</b><small style="display:block">${escapeHtml(event.date)}${event.time ? " at " + escapeHtml(event.time) : ""}${event.location ? " • " + escapeHtml(event.location) : ""}</small></div><button class="icon-btn" onclick="deleteItem('events','${event.id}')" aria-label="Delete appointment">×</button></div>`).join("")
+      : `<div class="empty-state">No upcoming appointments saved.</div>`;
+  }
 }
 
-function renderAlerts(){
-  const manual=store.get("alerts");
-  const callahanUnfiled=store.get("callahanPurchases").filter(x=>!x.filed).length;
-  const today=localDateKey();
-  const overdueBills=store.get("bills").filter(x=>!x.paid&&x.dueDate<today);
-  const generated=[];
-  if(callahanUnfiled) generated.push({text:`${callahanUnfiled} Callahan receipt${callahanUnfiled===1?"":"s"} still need the receipt box.`,type:"Receipt"});
-  if(overdueBills.length) generated.push({text:`${overdueBills.length} bill${overdueBills.length===1?" is":"s are"} overdue, totaling ${money(overdueBills.reduce((sum,x)=>sum+x.amount,0))}.`,type:"Bills"});
-  const all=[...manual,...generated];
-  $("#alertCount").textContent=all.length;
-  $("#alertsList").innerHTML=all.length?all.slice(0,6).map((x,i)=>`<div class="list-item"><div><b>${escapeHtml(x.type)}</b><small style="display:block">${escapeHtml(x.text)}</small></div>${i<manual.length?`<button class="icon-btn" onclick="deleteItem('alerts','${x.id}')">×</button>`:""}</div>`).join(""):`Nothing urgent. Nice!`;
+function renderMovies(){
+  const movies=store.get("movies");
+  const list=$("#movieList");
+  if(!list) return;
+  list.innerHTML=movies.length?movies.slice(0,6).map(movie=>`<div class="list-item"><label style="display:flex;grid-template-columns:auto 1fr;gap:9px;margin:0"><input type="checkbox" style="width:auto" ${movie.watched?"checked":""} onchange="toggleMovie('${movie.id}')"><span style="${movie.watched?"text-decoration:line-through;color:#8a8490":""}"><b>${escapeHtml(movie.title)}</b>${movie.where?`<small style="display:block">${escapeHtml(movie.where)}</small>`:""}</span></label><button class="icon-btn" onclick="deleteItem('movies','${movie.id}')" aria-label="Delete movie">×</button></div>`).join(""):`<div class="empty-state">No movies waiting. Add one when something catches your eye.</div>`;
 }
 
 function escapeHtml(s=""){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
@@ -590,13 +595,14 @@ $("#exportCallahanCsv").addEventListener("click",()=>exportCsv("callahanPurchase
   ["Date","Item","Type","Store","Amount","Paid By","Photo Taken","Receipt Filed","Notes"],
   x=>[x.date,x.item,x.type,x.store,x.amount,x.paidBy,x.photoTaken,x.filed,x.notes]));
 $("#morningBriefBtn").addEventListener("click",()=>{
-  const tasks=store.get("tasks").filter(x=>!x.done).length, alerts=Number($("#alertCount").textContent),
-  events=store.get("events").filter(x=>x.date===new Date().toISOString().slice(0,10)).length,
+  const today=localDateKey(), tasks=store.get("tasks").filter(x=>!x.done).length,
+  bills=store.get("bills").filter(x=>!x.paid&&x.dueDate===today),
+  events=store.get("events").filter(x=>x.date===today).length,
   brain=store.get("brainItems").length;
   $("#morningBriefContent").innerHTML=[
     `You have <b>${events}</b> event${events===1?"":"s"} today.`,
     `<b>${tasks}</b> task${tasks===1?"":"s"} remain open.`,
-    `<b>${alerts}</b> alert${alerts===1?"":"s"} need attention.`,
+    `<b>${bills.length}</b> bill${bills.length===1?" is":"s are"} due today${bills.length?`, totaling ${money(bills.reduce((sum,x)=>sum+x.amount,0))}`:""}.`,
     `Your Brain Inbox contains <b>${brain}</b> item${brain===1?"":"s"}.`
   ].map(x=>`<div class="brief-line">${x}</div>`).join("");
   openModal("morningBriefModal");
@@ -617,13 +623,7 @@ function renderTodaysMission(){
     .get("tasks")
     .filter(task => !task.done && task.dueDate === today);
 
-  const alerts = store.get("alerts");
-
-  const followups = alerts.filter(
-    alert =>
-      alert.type === "General" ||
-      alert.type === "Vendor Payment"
-  );
+  const bills = store.get("bills").filter(bill => !bill.paid && bill.dueDate === today);
 
   const appointmentCount = document.getElementById("todayAppointmentCount");
   const appointmentSummary = document.getElementById("todayNextAppointment");
@@ -640,18 +640,12 @@ function renderTodaysMission(){
 
   renderVendorSheetSummaries();
 
-  const followupCount = document.getElementById("todayFollowupCount");
-  const followupSummary = document.getElementById("todayFollowupSummary");
-
-  if(followupCount){
-    followupCount.textContent = followups.length;
-  }
-
-  if(followupSummary){
-    followupSummary.textContent = followups.length
-      ? followups[0].text
-      : "Nothing waiting";
-  }
+  const billCount = document.getElementById("todayBillCount");
+  const billSummary = document.getElementById("todayBillSummary");
+  if(billCount) billCount.textContent = bills.length;
+  if(billSummary) billSummary.textContent = bills.length
+    ? `${bills[0].name} — ${money(bills[0].amount)}${bills.length>1?` (+${bills.length-1} more)`:""}`
+    : "Nothing due today";
 
   const taskCount = document.getElementById("todayTaskCount");
   const taskSummary = document.getElementById("todayTaskSummary");
@@ -676,7 +670,7 @@ function renderAll(){
   renderBrain();
   renderTasks();
   renderEvents();
-  renderAlerts();
+  renderMovies();
   renderTodaysMission();
 }renderAll();
 // ======================================
