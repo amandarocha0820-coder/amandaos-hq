@@ -393,7 +393,7 @@
 
   <dialog id="paycheckModal" class="modal">
     <form method="dialog" id="paycheckForm">
-      <div class="modal-header"><div><span class="card-label">MONEY IN</span><h3>Add Paycheck</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <div class="modal-header"><div><span class="card-label">MONEY IN</span><h3 id="paycheckModalHeading">Add Paycheck</h3></div><button class="close-btn" value="cancel">×</button></div>
       <div class="form-grid">
         <label>Pay date<input name="date" type="date" required /></label>
         <label>Income source<input name="source" value="Amanda — Allied Universal" required /></label>
@@ -403,7 +403,7 @@
         <label>Actual take-home pay<input name="net" type="number" step="0.01" min="0" required /></label>
       </div>
       <label>Notes<textarea name="notes" rows="2"></textarea></label>
-      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Paycheck</button></div>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" id="paycheckSaveButton" value="default">Save Paycheck</button></div>
     </form>
   </dialog>
 
@@ -585,6 +585,6 @@
   <div id="celebrationLayer" class="celebration-layer" aria-live="polite" aria-atomic="true">
     <div id="celebrationToast" class="celebration-toast"></div>
   </div>
-  <script src="app.js?v=20260902-1"></script>
+  <script src="app.js?v=20260902-2"></script>
 </body>
 </html>
