@@ -137,10 +137,53 @@ handleForm("callahanForm","callahanPurchases",fd=>({
   photoTaken:fd.get("photoTaken")==="on", filed:fd.get("filed")==="on"
 }), queueCallahanPurchase);
 
-handleForm("paycheckForm","paychecks",fd=>({
-  id:uid(), date:fd.get("date"), source:fd.get("source"), gross:Number(fd.get("gross")),
-  deductions:Number(fd.get("deductions")), truck:Number(fd.get("truck")), net:Number(fd.get("net")), notes:fd.get("notes")
-}));
+const paycheckForm=document.getElementById("paycheckForm");
+paycheckForm.addEventListener("submit",e=>{
+  e.preventDefault();
+  const fd=new FormData(paycheckForm);
+  const paychecks=store.get("paychecks");
+  const editId=paycheckForm.dataset.editId;
+  const paycheck={
+    id:editId||uid(), date:fd.get("date"), source:fd.get("source"), gross:Number(fd.get("gross")),
+    deductions:Number(fd.get("deductions")), truck:Number(fd.get("truck")), net:Number(fd.get("net")), notes:fd.get("notes")
+  };
+  if(editId){
+    const index=paychecks.findIndex(item=>item.id===editId);
+    if(index>=0) paychecks[index]=paycheck;
+  }else{
+    paychecks.unshift(paycheck);
+  }
+  store.set("paychecks",paychecks);
+  paycheckForm.closest("dialog").close();
+  resetPaycheckForm();
+  renderAll();
+});
+
+function resetPaycheckForm(){
+  paycheckForm.reset();
+  delete paycheckForm.dataset.editId;
+  paycheckForm.elements.source.value="Amanda — Allied Universal";
+  paycheckForm.elements.truck.value="200";
+  const heading=document.getElementById("paycheckModalHeading");
+  const saveButton=document.getElementById("paycheckSaveButton");
+  if(heading) heading.textContent="Add Paycheck";
+  if(saveButton) saveButton.textContent="Save Paycheck";
+  setTodayDefaults();
+}
+
+function editPaycheck(id){
+  const paycheck=store.get("paychecks").find(item=>item.id===id);
+  if(!paycheck) return;
+  paycheckForm.dataset.editId=id;
+  ["date","source","gross","deductions","truck","net","notes"].forEach(name=>{
+    paycheckForm.elements[name].value=paycheck[name]??"";
+  });
+  document.getElementById("paycheckModalHeading").textContent="Edit Paycheck";
+  document.getElementById("paycheckSaveButton").textContent="Save Changes";
+  openModal("paycheckModal");
+}
+
+$$('[data-open="paycheckModal"]').forEach(button=>button.addEventListener("click",resetPaycheckForm));
 
 handleForm("transferForm","moneyTransfers",fd=>({
   id:uid(), date:fd.get("date"), amount:Number(fd.get("amount")), paycheckId:fd.get("paycheckId"),
@@ -338,7 +381,7 @@ function renderMoney(){
   }
   const paycheckLabel=id=>{ const p=paychecks.find(x=>x.id===id); return p?`${p.date} · ${p.source}`:"Not linked"; };
 
-  $("#paycheckTableBody").innerHTML=paychecks.length?paychecks.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(x.source)}</td><td>${money(x.gross)}</td><td>${money(x.deductions+x.truck)}</td><td><b>${money(x.net)}</b></td><td><button class="icon-btn" onclick="deleteItem('paychecks','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">Add your first paycheck to begin planning.</td></tr>`;
+  $("#paycheckTableBody").innerHTML=paychecks.length?paychecks.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(x.source)}</td><td>${money(x.gross)}</td><td>${money(x.deductions+x.truck)}</td><td><b>${money(x.net)}</b></td><td><div style="display:flex;gap:6px;justify-content:flex-end"><button class="small-btn" onclick="editPaycheck('${x.id}')">Edit</button><button class="icon-btn" onclick="deleteItem('paychecks','${x.id}')" aria-label="Delete paycheck">×</button></div></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">Add your first paycheck to begin planning.</td></tr>`;
   $("#transferTableBody").innerHTML=transfers.length?transfers.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(paycheckLabel(x.paycheckId))}</td><td>${escapeHtml(x.purpose)}</td><td>${escapeHtml(x.notes||"")}</td><td><b>${money(x.amount)}</b></td><td><button class="icon-btn" onclick="deleteItem('moneyTransfers','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">No transfers to Paul recorded yet.</td></tr>`;
   $("#billTableBody").innerHTML=bills.length?bills.map(x=>`<tr><td>${x.dueDate}</td><td>${escapeHtml(x.name)}<small style="display:block">${escapeHtml(x.category)}</small></td><td>${money(x.amount)}</td><td>${escapeHtml(x.frequency)}</td><td>${x.autoPay?"Yes":"No"}</td><td><button class="small-btn" onclick="toggleBill('${x.id}')">${x.paid?"✅ Paid":"Mark paid"}</button></td><td><button class="icon-btn" onclick="deleteItem('bills','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="7" class="empty-state">Optional: add major shared bills if you want to see them.</td></tr>`;
   $("#spendingTableBody").innerHTML=spending.length?spending.map(x=>`<tr><td>${x.date}</td><td>${escapeHtml(x.description)}</td><td>${escapeHtml(x.category)}</td><td>${escapeHtml(x.flexibility)}</td><td>${money(x.amount)}</td><td><button class="icon-btn" onclick="deleteItem('spending','${x.id}')">×</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty-state">Record only money Amanda paid directly.</td></tr>`;
