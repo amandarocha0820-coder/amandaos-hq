@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AmandaOS</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20260902-1" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -125,8 +125,12 @@
 </div>
 
         <div class="today-box">
-            <h3>💬 Replies / Follow Ups</h3>
-            <p>Nothing waiting.</p>
+            <div class="today-box-header">
+              <h3>💵 Bills Due Today</h3>
+              <button class="icon-btn" type="button" data-open="billModal" aria-label="Add bill">＋</button>
+            </div>
+            <strong id="todayBillCount">0</strong>
+            <p id="todayBillSummary">Nothing due today</p>
         </div>
 
         <div class="today-box">
@@ -140,12 +144,12 @@
 </section>
 
         <div class="dashboard-grid">
-          <article class="card alerts-card">
+          <article class="card">
             <div class="card-header">
-              <div><span class="card-label">ALERTS</span><h3>Needs attention</h3></div>
-              <span class="count-badge" id="alertCount">0</span>
+              <div><span class="card-label">WATCH LIST</span><h3>Movies</h3></div>
+              <button class="icon-btn" data-open="movieModal" aria-label="Add movie">＋</button>
             </div>
-            <div id="alertsList" class="list empty-state">Nothing urgent. Nice!</div>
+            <div id="movieList" class="list empty-state">No movies waiting. Add one when something catches your eye.</div>
           </article>
 
           <article class="card">
@@ -232,7 +236,7 @@
             <button data-open="brainModal">🧠 Brain Dump</button>
             <button data-open="taskModal">✅ Add Task</button>
             <button data-open="eventModal">📅 Add Event</button>
-            <button data-open="alertModal">🚨 Add Alert</button>
+            <button data-open="movieModal">🎬 Add Movie</button>
           </div>
         </section>
       </section>
@@ -528,12 +532,12 @@
     </form>
   </dialog>
 
-  <dialog id="alertModal" class="modal">
-    <form method="dialog" id="alertForm">
-      <div class="modal-header"><div><span class="card-label">ALERT</span><h3>Add Alert</h3></div><button class="close-btn" value="cancel">×</button></div>
-      <label>Alert message<input name="text" required /></label>
-      <label>Type<select name="type"><option>General</option><option>Vendor Payment</option><option>Application</option><option>Medication Pickup</option></select></label>
-      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Save Alert</button></div>
+  <dialog id="movieModal" class="modal">
+    <form method="dialog" id="movieForm">
+      <div class="modal-header"><div><span class="card-label">WATCH LIST</span><h3>Add Movie</h3></div><button class="close-btn" value="cancel">×</button></div>
+      <label>Movie title<input name="title" required /></label>
+      <label>Where to watch (optional)<input name="where" placeholder="Netflix, theater, rent…" /></label>
+      <div class="modal-actions"><button class="ghost-btn" value="cancel">Cancel</button><button class="primary-btn" value="default">Add to List</button></div>
     </form>
   </dialog>
 
@@ -546,7 +550,7 @@
       <button data-jump="brainModal">🧠 Brain Dump</button>
       <button data-jump="taskModal">✅ Add Task</button>
       <button data-jump="eventModal">📅 Add Event</button>
-      <button data-jump="alertModal">🚨 Add Alert</button>
+      <button data-jump="movieModal">🎬 Add Movie</button>
     </div>
   </dialog>
 
@@ -581,6 +585,6 @@
   <div id="celebrationLayer" class="celebration-layer" aria-live="polite" aria-atomic="true">
     <div id="celebrationToast" class="celebration-toast"></div>
   </div>
-  <script src="app.js"></script>
+  <script src="app.js?v=20260902-1"></script>
 </body>
 </html>
