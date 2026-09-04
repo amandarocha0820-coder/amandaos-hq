@@ -623,7 +623,7 @@ function renderMovies(){
   const movies=store.get("movies");
   const list=$("#movieList");
   if(!list) return;
-  list.innerHTML=movies.length?movies.slice(0,6).map(movie=>`<div class="list-item"><label style="display:flex;grid-template-columns:auto 1fr;gap:9px;margin:0"><input type="checkbox" style="width:auto" ${movie.watched?"checked":""} onchange="toggleMovie('${movie.id}')"><span style="${movie.watched?"text-decoration:line-through;color:#8a8490":""}"><b>${escapeHtml(movie.title)}</b>${movie.where?`<small style="display:block">${escapeHtml(movie.where)}</small>`:""}</span></label><button class="icon-btn" onclick="deleteItem('movies','${movie.id}')" aria-label="Delete movie">×</button></div>`).join(""):`<div class="empty-state">No movies waiting. Add one when something catches your eye.</div>`;
+  list.innerHTML=movies.length?movies.map(movie=>`<div class="list-item"><label style="display:flex;grid-template-columns:auto 1fr;gap:9px;margin:0"><input type="checkbox" style="width:auto" ${movie.watched?"checked":""} onchange="toggleMovie('${movie.id}')"><span style="${movie.watched?"text-decoration:line-through;color:#8a8490":""}"><b>${escapeHtml(movie.title)}</b>${movie.where?`<small style="display:block">${escapeHtml(movie.where)}</small>`:""}</span></label><button class="icon-btn" onclick="deleteItem('movies','${movie.id}')" aria-label="Delete movie">×</button></div>`).join(""):`<div class="empty-state">No movies waiting. Add one when something catches your eye.</div>`;
 }
 
 function escapeHtml(s=""){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
