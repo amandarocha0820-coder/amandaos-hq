@@ -343,6 +343,28 @@ main{
   gap:9px;
 }
 
+#movieList{
+  max-height:300px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-right:8px;
+  scrollbar-gutter:stable;
+}
+
+#movieList::-webkit-scrollbar{
+  width:8px;
+}
+
+#movieList::-webkit-scrollbar-thumb{
+  background:#cbbbe1;
+  border-radius:999px;
+}
+
+#movieList::-webkit-scrollbar-track{
+  background:#f3eef8;
+  border-radius:999px;
+}
+
 .list-item{
   border-top:1px solid var(--line);
   padding-top:9px;
