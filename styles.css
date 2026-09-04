@@ -365,6 +365,16 @@ main{
   border-radius:999px;
 }
 
+#movieList .icon-btn{
+  flex:none;
+  width:27px;
+  height:27px;
+  padding:0;
+  border-radius:8px;
+  font-size:15px;
+  line-height:1;
+}
+
 .list-item{
   border-top:1px solid var(--line);
   padding-top:9px;
